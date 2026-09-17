@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Employee List</title>
+
+    <!-- Tailwind + DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+
+    <script>
+        let employees = [];
+
+        function onLoad() {
+            employees =
+                JSON.parse(localStorage.getItem("employees") ?? "[]");
+
+            loadEmployeesInList();
+        }
+
+        function addEmployee() {
+
+            let employee = {
+                name: document.getElementById("name").value,
+                salary: document.getElementById("salary").value,
+                experience: document.getElementById("experience").value,
+                dob: document.getElementById("dob").value
+            };
+
+            employees.push(employee);
+
+            localStorage.setItem(
+                "employees",
+                JSON.stringify(employees)
+            );
+
+            loadEmployeesInList();
+
+            // Clear form
+            document.getElementById("employeeForm").reset();
+        }
+
+        function loadEmployeesInList() {
+
+            let htmlString = "";
+
+            employees.forEach((employee, index) => {
+
+                htmlString += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${employee.name}</td>
+                        <td>₹${employee.salary}</td>
+                        <td>${employee.experience} years</td>
+                        <td>${employee.dob}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById("employeeList").innerHTML =
+                htmlString;
+        }
+    </script>
+</head>
+
+
+<body onload="onLoad()" class="bg-base-200 min-h-screen p-8">
+
+    <div class="max-w-5xl mx-auto">
+
+        <h1 class="text-4xl font-bold text-center mb-8">
+            Employee Survey
+        </h1>
+
+
+        <!-- FORM -->
+
+        <div class="card bg-base-100 shadow-xl mb-10">
+
+            <div class="card-body">
+
+                <h2 class="card-title mb-4">
+                    Add Employee
+                </h2>
+
+                <form id="employeeForm"
+                      onsubmit="event.preventDefault(); addEmployee()">
+
+                    <!-- NAME -->
+
+                    <label class="form-control mb-4">
+                        <div class="label">
+                            <span class="label-text">Employee Name</span>
+                        </div>
+
+                        <input
+                            id="name"
+                            type="text"
+                            placeholder="Enter employee name"
+                            class="input input-bordered"
+                            required
+                        />
+                    </label>
+
+
+                    <!-- SALARY -->
+
+                    <label class="form-control mb-4">
+                        <div class="label">
+                            <span class="label-text">Salary</span>
+                        </div>
+
+                        <input
+                            id="salary"
+                            type="number"
+                            placeholder="Enter salary"
+                            class="input input-bordered"
+                            required
+                        />
+                    </label>
+
+
+                    <!-- EXPERIENCE -->
+
+                    <label class="form-control mb-4">
+                        <div class="label">
+                            <span class="label-text">Experience</span>
+                        </div>
+
+                        <input
+                            id="experience"
+                            type="number"
+                            placeholder="Years of experience"
+                            class="input input-bordered"
+                            min="0"
+                            required
+                        />
+                    </label>
+
+
+                    <!-- DOB -->
+
+                    <label class="form-control mb-6">
+                        <div class="label">
+                            <span class="label-text">
+                                Date of Birth
+                            </span>
+                        </div>
+
+                        <input
+                            id="dob"
+                            type="date"
+                            class="input input-bordered"
+                            required
+                        />
+                    </label>
+
+
+                    <!-- BUTTON -->
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary w-full">
+                        Add Employee
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+
+
+
+        <!-- EMPLOYEE LIST -->
+
+        <div class="card bg-base-100 shadow-xl">
+
+            <div class="card-body">
+
+                <h2 class="card-title mb-4">
+                    Employee List
+                </h2>
+
+                <div class="overflow-x-auto">
+
+                    <table class="table table-zebra">
+
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Salary</th>
+                                <th>Experience</th>
+                                <th>DOB</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="employeeList">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
