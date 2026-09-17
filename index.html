@@ -1,0 +1,703 @@
+```
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <title>Expense Tracker</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css"
+        rel="stylesheet"
+        type="text/css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/daisyui@5"
+        rel="stylesheet"
+        type="text/css"
+    >
+
+</head>
+
+<body onload="onLoad()" class="bg-base-200 min-h-screen">
+
+    <div class="max-w-6xl mx-auto p-6">
+
+        <h1 class="text-4xl font-bold text-center mb-8">
+            💰 Expense Tracker
+        </h1>
+
+        <!-- ADD EXPENSE -->
+
+        <div class="card bg-base-100 shadow-xl mb-8">
+
+            <div class="card-body">
+
+                <h2 id="formTitle" class="card-title mb-4">
+                    Add Expense
+                </h2>
+
+                <form
+                    id="expenseForm"
+                    onsubmit="event.preventDefault(); saveExpense()"
+                >
+
+                    <!-- NAME -->
+
+                    <label class="form-control mb-4">
+
+                        <div class="label">
+                            <span class="label-text">
+                                Expense Name
+                            </span>
+                        </div>
+
+                        <input
+                            id="expenseName"
+                            type="text"
+                            placeholder="Example: Electricity Bill"
+                            class="input input-bordered"
+                            required
+                        >
+
+                    </label>
+
+                    <!-- CATEGORY -->
+
+                    <label class="form-control mb-4">
+
+                        <div class="label">
+                            <span class="label-text">
+                                Category
+                            </span>
+                        </div>
+
+                        <select
+                            id="category"
+                            class="select select-bordered"
+                            required
+                        >
+
+                            <option value="">
+                                Select category
+                            </option>
+
+                            <option value="Electricity">
+                                ⚡ Electricity
+                            </option>
+
+                            <option value="Gas">
+                                🔥 Gas
+                            </option>
+
+                            <option value="Water">
+                                💧 Water
+                            </option>
+
+                            <option value="Internet">
+                                🌐 Internet
+                            </option>
+
+                            <option value="Rent">
+                                🏠 Rent
+                            </option>
+
+                            <option value="Groceries">
+                                🛒 Groceries
+                            </option>
+
+                            <option value="Transport">
+                                🚗 Transport
+                            </option>
+
+                            <option value="Other">
+                                📦 Other
+                            </option>
+
+                        </select>
+
+                    </label>
+
+                    <!-- AMOUNT -->
+
+                    <label class="form-control mb-4">
+
+                        <div class="label">
+                            <span class="label-text">
+                                Amount
+                            </span>
+                        </div>
+
+                        <input
+                            id="amount"
+                            type="number"
+                            placeholder="Enter amount"
+                            class="input input-bordered"
+                            min="0"
+                            required
+                        >
+
+                    </label>
+
+                    <!-- DATE -->
+
+                    <label class="form-control mb-6">
+
+                        <div class="label">
+                            <span class="label-text">
+                                Date
+                            </span>
+                        </div>
+
+                        <input
+                            id="date"
+                            type="date"
+                            class="input input-bordered"
+                            required
+                        >
+
+                    </label>
+
+                    <!-- BUTTONS -->
+
+                    <div class="flex gap-3">
+
+                        <button
+                            id="saveButton"
+                            type="submit"
+                            class="btn btn-primary flex-1"
+                        >
+                            Add Expense
+                        </button>
+
+                        <button
+                            id="cancelButton"
+                            type="button"
+                            onclick="cancelEdit()"
+                            class="btn btn-neutral hidden"
+                        >
+                            Cancel
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+        <!-- FILTERS -->
+
+        <div class="card bg-base-100 shadow-xl mb-8">
+
+            <div class="card-body">
+
+                <h2 class="card-title">
+                    🔎 Filters
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-4">
+
+                    <!-- CATEGORY FILTER -->
+
+                    <label class="form-control">
+
+                        <div class="label">
+                            <span class="label-text">
+                                Filter by Category
+                            </span>
+                        </div>
+
+                        <select
+                            id="categoryFilter"
+                            onchange="loadExpenses()"
+                            class="select select-bordered"
+                        >
+
+                            <option value="All">
+                                All Categories
+                            </option>
+
+                            <option value="Electricity">
+                                Electricity
+                            </option>
+
+                            <option value="Gas">
+                                Gas
+                            </option>
+
+                            <option value="Water">
+                                Water
+                            </option>
+
+                            <option value="Internet">
+                                Internet
+                            </option>
+
+                            <option value="Rent">
+                                Rent
+                            </option>
+
+                            <option value="Groceries">
+                                Groceries
+                            </option>
+
+                            <option value="Transport">
+                                Transport
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </label>
+
+                    <!-- MONTH FILTER -->
+
+                    <label class="form-control">
+
+                        <div class="label">
+                            <span class="label-text">
+                                Filter by Month
+                            </span>
+                        </div>
+
+                        <input
+                            id="monthFilter"
+                            type="month"
+                            onchange="loadExpenses()"
+                            class="input input-bordered"
+                        >
+
+                    </label>
+
+                </div>
+
+                <button
+                    onclick="clearFilters()"
+                    class="btn btn-outline mt-4"
+                >
+                    Clear Filters
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- TOTAL -->
+
+        <div class="stats shadow w-full mb-8">
+
+            <div class="stat">
+
+                <div class="stat-title">
+                    Total Expenses
+                </div>
+
+                <div
+                    id="totalAmount"
+                    class="stat-value text-primary"
+                >
+                    ₹0
+                </div>
+
+                <div class="stat-desc">
+                    Based on current filters
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- CATEGORY TOTALS -->
+
+        <div
+            id="categoryTotals"
+            class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+        >
+        </div>
+
+        <!-- EXPENSE LIST -->
+
+        <div class="card bg-base-100 shadow-xl">
+
+            <div class="card-body">
+
+                <h2 class="card-title mb-4">
+                    📋 Expense List
+                </h2>
+
+                <div class="overflow-x-auto">
+
+                    <table class="table table-zebra">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>#</th>
+                                <th>Expense</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="expenseList">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        let expenses = [];
+
+        let editingIndex = -1;
+
+        // PAGE LOAD
+
+        function onLoad() {
+
+            expenses =
+                JSON.parse(
+                    localStorage.getItem("expenses") ?? "[]"
+                );
+
+            loadExpenses();
+
+        }
+
+        // ADD OR UPDATE EXPENSE
+
+        function saveExpense() {
+
+            let expense = {
+
+                name:
+                    document.getElementById("expenseName").value,
+
+                category:
+                    document.getElementById("category").value,
+
+                amount:
+                    Number(
+                        document.getElementById("amount").value
+                    ),
+
+                date:
+                    document.getElementById("date").value
+
+            };
+
+            if (editingIndex === -1) {
+
+                // Add new expense
+
+                expenses.push(expense);
+
+            } else {
+
+                // Update existing expense
+
+                expenses[editingIndex] = expense;
+
+            }
+
+            // Save to localStorage
+
+            localStorage.setItem(
+                "expenses",
+                JSON.stringify(expenses)
+            );
+
+            // Reset form
+
+            document.getElementById("expenseForm").reset();
+
+            editingIndex = -1;
+
+            document.getElementById("formTitle")
+                .innerText = "Add Expense";
+
+            document.getElementById("saveButton")
+                .innerText = "Add Expense";
+
+            document.getElementById("cancelButton")
+                .classList.add("hidden");
+
+            loadExpenses();
+
+        }
+
+        // LOAD EXPENSES
+
+        function loadExpenses() {
+
+            let htmlString = "";
+
+            let total = 0;
+
+            let selectedCategory =
+                document.getElementById("categoryFilter").value;
+
+            let selectedMonth =
+                document.getElementById("monthFilter").value;
+
+            let categoryTotals = {};
+
+            expenses.forEach(function (expense, index) {
+
+                // CATEGORY FILTER
+
+                let categoryMatches =
+                    selectedCategory === "All" ||
+                    expense.category === selectedCategory;
+
+                // MONTH FILTER
+
+                let monthMatches =
+                    selectedMonth === "" ||
+                    expense.date.startsWith(selectedMonth);
+
+                if (!categoryMatches || !monthMatches) {
+
+                    return;
+
+                }
+
+                // TOTAL
+
+                total =
+                    total + expense.amount;
+
+                // CATEGORY TOTAL
+
+                if (
+                    categoryTotals[expense.category]
+                    === undefined
+                ) {
+
+                    categoryTotals[expense.category] = 0;
+
+                }
+
+                categoryTotals[expense.category] =
+                    categoryTotals[expense.category]
+                    + expense.amount;
+
+                // TABLE ROW
+
+                htmlString += `
+
+                    <tr>
+
+                        <td>
+                            ${index + 1}
+                        </td>
+
+                        <td>
+                            ${expense.name}
+                        </td>
+
+                        <td>
+                            ${expense.category}
+                        </td>
+
+                        <td>
+                            ₹${expense.amount}
+                        </td>
+
+                        <td>
+                            ${expense.date}
+                        </td>
+
+                        <td>
+
+                            <button
+                                onclick="editExpense(${index})"
+                                class="btn btn-warning btn-sm mr-2"
+                            >
+                                Edit
+                            </button>
+
+                            <button
+                                onclick="deleteExpense(${index})"
+                                class="btn btn-error btn-sm"
+                            >
+                                Delete
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            });
+
+            document.getElementById("expenseList")
+                .innerHTML = htmlString;
+
+            document.getElementById("totalAmount")
+                .innerText = "₹" + total;
+
+            showCategoryTotals(categoryTotals);
+
+        }
+
+        // SHOW CATEGORY TOTALS
+
+        function showCategoryTotals(categoryTotals) {
+
+            let htmlString = "";
+
+            for (
+                let category in categoryTotals
+            ) {
+
+                htmlString += `
+
+                    <div class="card bg-base-100 shadow">
+
+                        <div class="card-body">
+
+                            <h3 class="font-bold">
+                                ${category}
+                            </h3>
+
+                            <p class="text-2xl text-primary">
+                                ₹${categoryTotals[category]}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }
+
+            document.getElementById("categoryTotals")
+                .innerHTML = htmlString;
+
+        }
+
+        // EDIT EXPENSE
+
+        function editExpense(index) {
+
+            let expense = expenses[index];
+
+            document.getElementById("expenseName").value =
+                expense.name;
+
+            document.getElementById("category").value =
+                expense.category;
+
+            document.getElementById("amount").value =
+                expense.amount;
+
+            document.getElementById("date").value =
+                expense.date;
+
+            editingIndex = index;
+
+            document.getElementById("formTitle")
+                .innerText = "Edit Expense";
+
+            document.getElementById("saveButton")
+                .innerText = "Update Expense";
+
+            document.getElementById("cancelButton")
+                .classList.remove("hidden");
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+
+        }
+
+        // CANCEL EDIT
+
+        function cancelEdit() {
+
+            editingIndex = -1;
+
+            document.getElementById("expenseForm")
+                .reset();
+
+            document.getElementById("formTitle")
+                .innerText = "Add Expense";
+
+            document.getElementById("saveButton")
+                .innerText = "Add Expense";
+
+            document.getElementById("cancelButton")
+                .classList.add("hidden");
+
+        }
+
+        // DELETE EXPENSE
+
+        function deleteExpense(index) {
+
+            let answer =
+                confirm(
+                    "Are you sure you want to delete this expense?"
+                );
+
+            if (answer === false) {
+
+                return;
+
+            }
+
+            expenses.splice(index, 1);
+
+            localStorage.setItem(
+                "expenses",
+                JSON.stringify(expenses)
+            );
+
+            loadExpenses();
+
+        }
+
+        // CLEAR FILTERS
+
+        function clearFilters() {
+
+            document.getElementById("categoryFilter")
+                .value = "All";
+
+            document.getElementById("monthFilter")
+                .value = "";
+
+            loadExpenses();
+
+        }
+
+    </script>
+
+</body>
+
+</html>
+```
