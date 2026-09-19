@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Book Tracker</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            padding: 30px;
+            color: #24103d;
+            background:
+                radial-gradient(circle at 20% 20%, #ffffff99, transparent 25%),
+                radial-gradient(circle at 80% 30%, #bca7ff99, transparent 30%),
+                radial-gradient(circle at 40% 80%, #74b9ff88, transparent 30%),
+                linear-gradient(135deg, #d8c7ff, #91c8ff);
+        }
+
+        .box {
+            max-width: 1000px;
+            margin: auto;
+            padding: 25px;
+            border-radius: 20px;
+            background: #ffffffcc;
+            box-shadow: 0 8px 30px #493b6966;
+        }
+
+        h1 {
+            text-align: center;
+            color: #663399;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 8px;
+            border: 1px solid #8b7bb5;
+        }
+
+        button {
+            background: #663399;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #4169e1;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #663399;
+            color: white;
+            cursor: pointer;
+        }
+
+        td, th {
+            padding: 10px;
+            border: 1px solid #aaa;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: #eee8ff;
+        }
+
+        .delete {
+            background: #d63384;
+        }
+
+        .edit {
+            background: #4169e1;
+        }
+
+        .csv {
+            background: #168aad;
+        }
+
+        .pages {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <h1>📚 My Book Tracker 💜</h1>
+
+    <input id="title" placeholder="Book Name">
+    <input id="author" placeholder="Author">
+
+    <select id="status">
+        <option>Want to Read</option>
+        <option>Reading</option>
+        <option>Completed</option>
+    </select>
+
+    <input id="rating" type="number" min="1" max="5"
+           placeholder="Rating 1-5">
+
+    <button onclick="addBook()">➕ Add Book</button>
+    <button class="csv" onclick="exportCSV()">📥 CSV</button>
+
+    <br><br>
+
+    <select id="filter" onchange="showBooks()">
+        <option value="">All Books</option>
+        <option>Want to Read</option>
+        <option>Reading</option>
+        <option>Completed</option>
+    </select>
+
+    <table>
+        <thead>
+            <tr>
+                <th onclick="sortBooks('id')">ID ↕</th>
+                <th onclick="sortBooks('title')">Book ↕</th>
+                <th onclick="sortBooks('author')">Author ↕</th>
+                <th onclick="sortBooks('status')">Status ↕</th>
+                <th onclick="sortBooks('rating')">Rating ↕</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="bookList"></tbody>
+    </table>
+
+    <div class="pages">
+        <button onclick="previous()">⬅ Previous</button>
+        <b id="page">Page 1</b>
+        <button onclick="next()">Next ➡</button>
+    </div>
+
+</div>
+
+<script>
+
+let db;
+let page = 1;
+let limit = 20;
+let sortColumn = "id";
+let ascending = true;
+
+
+// Start SQL.js
+initSqlJs({
+    locateFile: file =>
+        "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/" + file
+}).then(function(SQL) {
+
+    db = new SQL.Database();
+
+    db.run(`
+        CREATE TABLE books (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            author TEXT,
+            status TEXT,
+            rating INTEGER
+        )
+    `);
+
+    showBooks();
+});
+
+
+// Add a book
+function addBook() {
+
+    let title = document.getElementById("title").value;
+    let author = document.getElementById("author").value;
+    let status = document.getElementById("status").value;
+    let rating = document.getElementById("rating").value;
+
+    if (title == "") {
+        alert("Please enter the book name!");
+        return;
+    }
+
+    db.run(
+        `INSERT INTO books(title, author, status, rating)
+         VALUES (?, ?, ?, ?)`,
+        [title, author, status, rating]
+    );
+
+    document.getElementById("title").value = "";
+    document.getElementById("author").value = "";
+    document.getElementById("rating").value = "";
+
+    page = 1;
+    showBooks();
+}
+
+
+// Show books
+function showBooks() {
+
+    let filter = document.getElementById("filter").value;
+
+    let sql = "SELECT * FROM books";
+
+    if (filter != "") {
+        sql += " WHERE status = '" + filter + "'";
+    }
+
+    sql += " ORDER BY " + sortColumn;
+    sql += ascending ? " ASC" : " DESC";
+
+    let result = db.exec(sql);
+    let books = result.length ? result[0].values : [];
+
+    let start = (page - 1) * limit;
+    let data = books.slice(start, start + limit);
+
+    let list = document.getElementById("bookList");
+
+    list.innerHTML = "";
+
+    data.forEach(function(book) {
+
+        list.innerHTML += `
+            <tr>
+                <td>${book[0]}</td>
+                <td>📖 ${book[1]}</td>
+                <td>${book[2]}</td>
+                <td>${book[3]}</td>
+                <td>⭐ ${book[4] || "-"}</td>
+
+                <td>
+                    <button class="edit"
+                        onclick="editBook(${book[0]})">
+                        ✏ Edit
+                    </button>
+
+                    <button class="delete"
+                        onclick="deleteBook(${book[0]})">
+                        🗑 Delete
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("page").innerText =
+        "Page " + page;
+}
+
+
+// Edit book
+function editBook(id) {
+
+    let result = db.exec(
+        "SELECT * FROM books WHERE id = " + id
+    );
+
+    let book = result[0].values[0];
+
+    let title = prompt("Book name:", book[1]);
+    let author = prompt("Author:", book[2]);
+    let status = prompt(
+        "Status (Want to Read / Reading / Completed):",
+        book[3]
+    );
+    let rating = prompt("Rating 1-5:", book[4]);
+
+    if (title != null) {
+
+        db.run(`
+            UPDATE books
+            SET title=?, author=?, status=?, rating=?
+            WHERE id=?
+        `, [title, author, status, rating, id]);
+
+        showBooks();
+    }
+}
+
+
+// Delete book
+function deleteBook(id) {
+
+    if (confirm("Delete this book?")) {
+
+        db.run(
+            "DELETE FROM books WHERE id=?",
+            [id]
+        );
+
+        showBooks();
+    }
+}
+
+
+// Sort books
+function sortBooks(column) {
+
+    if (sortColumn == column) {
+        ascending = !ascending;
+    } else {
+        sortColumn = column;
+        ascending = true;
+    }
+
+    showBooks();
+}
+
+
+// Previous page
+function previous() {
+
+    if (page > 1) {
+        page--;
+        showBooks();
+    }
+}
+
+
+// Next page
+function next() {
+
+    let filter = document.getElementById("filter").value;
+
+    let sql = "SELECT COUNT(*) FROM books";
+
+    if (filter != "") {
+        sql += " WHERE status = '" + filter + "'";
+    }
+
+    let count = db.exec(sql)[0].values[0][0];
+
+    if (page * limit < count) {
+        page++;
+        showBooks();
+    }
+}
+
+
+// Export CSV
+function exportCSV() {
+
+    let result = db.exec("SELECT * FROM books");
+
+    if (!result.length) {
+        alert("No books to export!");
+        return;
+    }
+
+    let csv = "ID,Book,Author,Status,Rating\n";
+
+    result[0].values.forEach(function(book) {
+        csv += book.join(",") + "\n";
+    });
+
+    let file = new Blob([csv], {
+        type: "text/csv"
+    });
+
+    let link = document.createElement("a");
+
+    link.href = URL.createObjectURL(file);
+    link.download = "books.csv";
+    link.click();
+}
+
+</script>
+
+</body>
+</html>
