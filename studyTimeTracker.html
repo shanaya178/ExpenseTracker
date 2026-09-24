@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Study Tracker</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #eff6ff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2563eb;
+        }
+
+        .total {
+            background: #2563eb;
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        .total h2 {
+            font-size: 35px;
+            margin: 5px;
+        }
+
+        .form {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 7px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .session {
+            background: white;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px #ddd;
+        }
+
+        .delete {
+            background: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📖 Study Time Tracker</h1>
+
+    <div class="total">
+        <p>Total Study Time</p>
+        <h2 id="totalHours">0 hours</h2>
+    </div>
+
+    <div class="form">
+
+        <input id="subject" placeholder="Subject">
+
+        <input id="time" type="number"
+               placeholder="Study time in minutes">
+
+        <input id="date" type="date">
+
+        <button onclick="addSession()">
+            Add Study Session
+        </button>
+
+    </div>
+
+    <div id="sessionList"></div>
+
+</div>
+
+<script>
+
+    let totalMinutes = 0;
+
+    function addSession() {
+
+        let subject = document.getElementById("subject").value;
+        let time = Number(document.getElementById("time").value);
+        let date = document.getElementById("date").value;
+
+        if (subject === "" || time === 0 || date === "") {
+            alert("Please fill all fields");
+            return;
+        }
+
+        totalMinutes += time;
+
+        let hours = Math.floor(totalMinutes / 60);
+        let minutes = totalMinutes % 60;
+
+        document.getElementById("totalHours").innerText =
+            `${hours} hours ${minutes} minutes`;
+
+        let session = document.createElement("div");
+
+        session.className = "session";
+
+        session.innerHTML = `
+            <h3>📚 ${subject}</h3>
+
+            <p>⏱️ ${time} minutes</p>
+
+            <p>📅 ${date}</p>
+
+            <button class="delete"
+                onclick="this.parentElement.remove()">
+                Delete
+            </button>
+        `;
+
+        document.getElementById("sessionList")
+            .appendChild(session);
+
+        document.getElementById("subject").value = "";
+        document.getElementById("time").value = "";
+        document.getElementById("date").value = "";
+    }
+
+</script>
+
+</body>
+</html>
