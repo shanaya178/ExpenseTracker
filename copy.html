@@ -1,46 +1,45 @@
-None selected 
 
-Skip to content
-Using Gmail with screen readers
-Enable desktop notifications for Gmail.
-   OK  No thanks
-Conversations
-8% of 15 GB used
-Terms · Privacy · Program Policies
-Last account activity: 37 minutes ago
-Details
 <!doctype html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Firebase Google Login</title>
 
     <link
       type="text/css"
       rel="stylesheet"
       href="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.css"
     />
-
-    <script>
-      function onClickOfAButton() {
-        document.getElementById("hideMe").hidden = true;
-        document.getElementById("showMe").hidden = false;
-      }
-    </script>
   </head>
+
   <body>
+    <h1>Firebase Google Login</h1>
+
+    <!-- FirebaseUI puts the Google login UI here -->
     <div id="firebaseui-auth-container"></div>
+
+    <!-- User information -->
     <div id="userSection" style="display: none">
-      <h2>Welcome!</h2>
-      <p>Name: <span id="userName"></span></p>
-      <p>Email: <span id="userEmail"></span></p>
-      <p>User ID: <span id="userId"></span></p>
-      <p>Photo URL: <span id="userPhoto"></span></p>
+      <h2>User Information</h2>
+
+      <p>
+        Name:
+        <span id="userName"></span>
+      </p>
+
+      <p>
+        Email:
+        <span id="userEmail"></span>
+      </p>
+
+      <p>
+        User ID:
+        <span id="userId"></span>
+      </p>
+
       <button id="logoutButton">Logout</button>
     </div>
 
-    <!-- Firebase -->
+    <!-- Firebase App -->
     <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
 
     <!-- Firebase Authentication -->
@@ -49,13 +48,11 @@ Details
     <!-- FirebaseUI -->
     <script src="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.js"></script>
 
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-      import {
-        getAuth,
-        onAuthStateChanged,
-        signOut,
-      } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    <script>
+      // --------------------------------------------------
+      // Firebase configuration
+      // --------------------------------------------------
+
       const firebaseConfig = {
         apiKey: "AIzaSyCectC2gNXIYpL8Rt4QeOsQuW5oEF2Tf4k",
         authDomain: "techcoderlabz-project.firebaseapp.com",
@@ -65,77 +62,84 @@ Details
         appId: "1:750937809509:web:b3561297b5d8ea282b5c8c",
         measurementId: "G-J13K9JQ058",
       };
+
+      // --------------------------------------------------
       // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
+      // --------------------------------------------------
+
+      firebase.initializeApp(firebaseConfig);
+
+      // --------------------------------------------------
       // FirebaseUI
-      const ui = new firebaseui.auth.AuthUI(auth);
-      // FirebaseUI configuration
+      // --------------------------------------------------
+
+      const ui = new firebaseui.auth.AuthUI(firebase.auth());
+
       const uiConfig = {
         signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID],
+
         signInFlow: "popup",
-         signInSuccessWithAuthResult: function(authResult, redirectUrl) { console.log("Logged in:", authResult.user); return false; }
+
+        callbacks: {
+          signInSuccessWithAuthResult: function (authResult, redirectUrl) {
+            console.log("Login successful:", authResult.user);
+
+            // Stay on this page.
+            return false;
+          },
+        },
       };
-      // Start FirebaseUI 
-      ui.start( "#firebaseui-auth-container", uiConfig );
 
-       // Authentication state
+      // Start FirebaseUI
 
-        firebase.auth().onAuthStateChanged(function(user) {
+      ui.start("#firebaseui-auth-container", uiConfig);
 
-            if (user) {
+      // --------------------------------------------------
+      // Authentication state
+      // --------------------------------------------------
 
-                // Logged in
+      firebase.auth().onAuthStateChanged(function (user) {
+        if (user) {
+          console.log("User:", user);
 
-                document
-                    .getElementById("firebaseui-auth-container")
-                    .style.display = "none";
+          // Hide FirebaseUI
 
-                document
-                    .getElementById("userSection")
-                    .style.display = "block";
+          document.getElementById("firebaseui-auth-container").style.display =
+            "none";
 
+          // Show user section
 
-                // Show user information
+          document.getElementById("userSection").style.display = "block";
 
-                document.getElementById("userName").innerText =
-                    user.displayName || "";
+          // Display user information
 
-                document.getElementById("userEmail").innerText =
-                    user.email || "";
+          document.getElementById("userName").innerText =
+            user.displayName || "";
 
-                document.getElementById("userId").innerText =
-                    user.uid;
+          document.getElementById("userEmail").innerText = user.email || "";
 
-            }
+          document.getElementById("userId").innerText = user.uid;
+        } else {
+          // User is not logged in
 
-            else {
+          document.getElementById("firebaseui-auth-container").style.display =
+            "block";
 
-                // Not logged in
+          document.getElementById("userSection").style.display = "none";
+        }
+      });
 
-                document
-                    .getElementById("firebaseui-auth-container")
-                    .style.display = "block";
+      // --------------------------------------------------
+      // Logout
+      // --------------------------------------------------
 
-                document
-                    .getElementById("userSection").style.display = "none";
-
-            }
-
+      document
+        .getElementById("logoutButton")
+        .addEventListener("click", function () {
+          firebase.auth().signOut();
         });
-
-
-        // Logout
-
-        document
-            .getElementById("logoutButton")
-            .addEventListener("click", function() {
-
-                firebase.auth().signOut();
-
-            });
     </script>
   </body>
 </html>
 firebase.html
-Displaying firebase.html.
+Displaying firebase.html. 
