@@ -22,9 +22,24 @@
         type="text/css"
     >
 
+    <link rel="stylesheet" href="css/auth.css">
+
 </head>
 
-<body onload="onLoad()" class="bg-base-200 min-h-screen">
+<body class="bg-base-200 min-h-screen">
+
+    <div id="auth-gate">
+        <div class="auth-card">
+            <p class="auth-kicker">My Dashboard</p>
+            <h1 id="auth-title">Sign in to continue</h1>
+            <p id="auth-status">Checking your Google session…</p>
+            <button id="google-sign-in" type="button" hidden>
+                <span class="g-logo" aria-hidden="true"></span>
+                Sign in with Google
+            </button>
+            <p id="auth-error" role="alert"></p>
+        </div>
+    </div>
 
     <div class="max-w-6xl mx-auto p-6">
 
@@ -370,11 +385,18 @@
 
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
+    <script src="js/tracker.js"></script>
+
     <script>
 
         let sessions = [];
 
-        let editingIndex = -1;
+        let editingId = null;
+
+        let saving = false;
 
         function formatTime(totalMinutes) {
 
@@ -392,18 +414,11 @@
 
         }
 
-        function onLoad() {
+        async function saveSession() {
 
-            sessions =
-                JSON.parse(
-                    localStorage.getItem("screenTime") ?? "[]"
-                );
-
-            loadSessions();
-
-        }
-
-        function saveSession() {
+            if (saving) {
+                return;
+            }
 
             let session = {
 
@@ -426,35 +441,46 @@
 
             };
 
-            if (editingIndex === -1) {
+            saving = true;
 
-                sessions.push(session);
+            try {
 
-            } else {
+                if (editingId === null) {
 
-                sessions[editingIndex] = session;
+                    await Tracker.add("screenTime", session);
+
+                } else {
+
+                    await Tracker.update("screenTime", editingId, session);
+
+                }
+
+                document.getElementById("screenTimeForm").reset();
+
+                editingId = null;
+
+                document.getElementById("formTitle")
+                    .innerText = "Add Screen Time";
+
+                document.getElementById("saveButton")
+                    .innerText = "Add Screen Time";
+
+                document.getElementById("cancelButton")
+                    .classList.add("hidden");
+
+                sessions = await Tracker.load("screenTime");
+
+                loadSessions();
+
+            } catch (error) {
+
+                Tracker.showBanner(Tracker.errorMessage(error));
+
+            } finally {
+
+                saving = false;
 
             }
-
-            localStorage.setItem(
-                "screenTime",
-                JSON.stringify(sessions)
-            );
-
-            document.getElementById("screenTimeForm").reset();
-
-            editingIndex = -1;
-
-            document.getElementById("formTitle")
-                .innerText = "Add Screen Time";
-
-            document.getElementById("saveButton")
-                .innerText = "Add Screen Time";
-
-            document.getElementById("cancelButton")
-                .classList.add("hidden");
-
-            loadSessions();
 
         }
 
@@ -474,7 +500,7 @@
 
             let categoryTotals = {};
 
-            sessions.forEach(function (session, index) {
+            sessions.forEach(function (session) {
 
                 let categoryMatches =
                     selectedCategory === "All" ||
@@ -490,7 +516,7 @@
 
                 }
 
-                totalMinutes = totalMinutes + session.minutes;
+                totalMinutes = totalMinutes + Number(session.minutes);
 
                 count = count + 1;
 
@@ -501,47 +527,47 @@
                 }
 
                 categoryTotals[session.category] =
-                    categoryTotals[session.category] + session.minutes;
+                    categoryTotals[session.category] + Number(session.minutes);
 
                 htmlString += `
 
                     <tr>
 
                         <td>
-                            ${index + 1}
+                            ${count}
                         </td>
 
                         <td>
-                            ${session.appName}
+                            ${Tracker.escape(session.appName)}
                         </td>
 
                         <td>
-                            ${session.category}
+                            ${Tracker.escape(session.category)}
                         </td>
 
                         <td>
-                            ${session.minutes}
+                            ${Tracker.escape(session.minutes)}
                         </td>
 
                         <td>
-                            ${session.date}
+                            ${Tracker.escape(session.date)}
                         </td>
 
                         <td>
-                            ${session.notes}
+                            ${Tracker.escape(session.notes)}
                         </td>
 
                         <td>
 
                             <button
-                                onclick="editSession(${index})"
+                                onclick="editSession('${session.id}')"
                                 class="btn btn-warning btn-sm mr-2"
                             >
                                 Edit
                             </button>
 
                             <button
-                                onclick="deleteSession(${index})"
+                                onclick="deleteSession('${session.id}')"
                                 class="btn btn-error btn-sm"
                             >
                                 Delete
@@ -554,6 +580,18 @@
                 `;
 
             });
+
+            if (!htmlString) {
+
+                htmlString = `
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            No screen time entries yet.
+                        </td>
+                    </tr>
+                `;
+
+            }
 
             document.getElementById("sessionList")
                 .innerHTML = htmlString;
@@ -581,7 +619,7 @@
                         <div class="card-body">
 
                             <h3 class="font-bold">
-                                ${category}
+                                ${Tracker.escape(category)}
                             </h3>
 
                             <p class="text-2xl text-primary">
@@ -601,9 +639,15 @@
 
         }
 
-        function editSession(index) {
+        function editSession(id) {
 
-            let session = sessions[index];
+            let session = sessions.find(function (item) {
+                return item.id === id;
+            });
+
+            if (!session) {
+                return;
+            }
 
             document.getElementById("appName").value =
                 session.appName;
@@ -620,7 +664,7 @@
             document.getElementById("notes").value =
                 session.notes;
 
-            editingIndex = index;
+            editingId = id;
 
             document.getElementById("formTitle")
                 .innerText = "Edit Screen Time";
@@ -640,7 +684,7 @@
 
         function cancelEdit() {
 
-            editingIndex = -1;
+            editingId = null;
 
             document.getElementById("screenTimeForm")
                 .reset();
@@ -656,7 +700,7 @@
 
         }
 
-        function deleteSession(index) {
+        async function deleteSession(id) {
 
             let answer =
                 confirm(
@@ -669,14 +713,23 @@
 
             }
 
-            sessions.splice(index, 1);
+            try {
 
-            localStorage.setItem(
-                "screenTime",
-                JSON.stringify(sessions)
-            );
+                await Tracker.remove("screenTime", id);
 
-            loadSessions();
+                if (editingId === id) {
+                    cancelEdit();
+                }
+
+                sessions = await Tracker.load("screenTime");
+
+                loadSessions();
+
+            } catch (error) {
+
+                Tracker.showBanner(Tracker.errorMessage(error));
+
+            }
 
         }
 
@@ -692,7 +745,18 @@
 
         }
 
+        Tracker.onReady(async function () {
+
+            await Tracker.migrateLocalList("screenTime", "screenTime");
+
+            sessions = await Tracker.load("screenTime");
+
+            loadSessions();
+
+        });
+
     </script>
+
 
 </body>
 

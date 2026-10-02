@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Manager</title>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
-
+    <link rel="stylesheet" href="css/auth.css">
     <style>
         body {
             font-family: Arial;
@@ -84,11 +84,22 @@
         }
     </style>
 </head>
-
 <body>
 
-<div class="box">
+<div id="auth-gate">
+    <div class="auth-card">
+        <p class="auth-kicker">My Dashboard</p>
+        <h1 id="auth-title">Sign in to continue</h1>
+        <p id="auth-status">Checking your Google session…</p>
+        <button id="google-sign-in" type="button" hidden>
+            <span class="g-logo" aria-hidden="true"></span>
+            Sign in with Google
+        </button>
+        <p id="auth-error" role="alert"></p>
+    </div>
+</div>
 
+<div class="box">
     <h1>🌸 Student Manager 🌸</h1>
 
     <input id="name" placeholder="Student Name">
@@ -101,7 +112,7 @@
 
     <br><br>
 
-    <select id="filter" onchange="showStudents()">
+    <select id="filter" onchange="page = 1; showStudents()">
         <option value="">All Grades</option>
         <option value="6">Grade 6</option>
         <option value="7">Grade 7</option>
@@ -121,181 +132,176 @@
                 <th>Actions</th>
             </tr>
         </thead>
-
         <tbody id="studentList"></tbody>
     </table>
 
     <div class="pages">
         <button onclick="previousPage()">⬅ Previous</button>
-
         <b id="pageNumber">Page 1</b>
-
         <button onclick="nextPage()">Next ➡</button>
     </div>
-
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
+<script src="js/tracker.js"></script>
 <script>
-
-let db;
+let students = [];
 let page = 1;
 let limit = 20;
 let sortColumn = "roll";
 let ascending = true;
+let saving = false;
 
+function studentRows() {
+    const grade = document.getElementById("filter").value;
+    let rows = students.slice();
 
-// Start SQL.js
-initSqlJs({
-    locateFile: file =>
-        "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/" + file
-}).then(function(SQL) {
+    if (grade) {
+        rows = rows.filter(function (student) {
+            return String(student.grade) === grade;
+        });
+    }
 
-    db = new SQL.Database();
+    const direction = ascending ? 1 : -1;
 
-    // Create student table
-    db.run(`
-        CREATE TABLE students (
-            roll INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            grade INTEGER NOT NULL,
-            dob TEXT,
-            address TEXT
-        )
-    `);
+    rows.sort(function (a, b) {
+        if (sortColumn === "roll") {
+            return (students.indexOf(a) - students.indexOf(b)) * direction;
+        }
 
-    showStudents();
-});
+        if (sortColumn === "grade") {
+            return ((Number(a.grade) || 0) - (Number(b.grade) || 0)) * direction;
+        }
 
+        return String(a[sortColumn] ?? "").localeCompare(String(b[sortColumn] ?? "")) * direction;
+    });
 
-// Add student
-function addStudent() {
+    return rows;
+}
 
-    let n = document.getElementById("name").value;
-    let g = document.getElementById("grade").value;
-    let d = document.getElementById("dob").value;
-    let a = document.getElementById("address").value;
+async function addStudent() {
+    if (saving) {
+        return;
+    }
 
-    if (n == "" || g == "") {
+    const name = document.getElementById("name").value.trim();
+    const grade = document.getElementById("grade").value;
+    const dob = document.getElementById("dob").value;
+    const address = document.getElementById("address").value.trim();
+
+    if (!name || grade === "") {
         alert("Please enter name and grade!");
         return;
     }
 
-    db.run(
-        "INSERT INTO students(name, grade, dob, address) VALUES (?, ?, ?, ?)",
-        [n, g, d, a]
-    );
+    saving = true;
 
-    document.getElementById("name").value = "";
-    document.getElementById("grade").value = "";
-    document.getElementById("dob").value = "";
-    document.getElementById("address").value = "";
+    try {
+        await Tracker.add("students", {
+            name: name,
+            grade: Number(grade),
+            dob: dob,
+            address: address
+        });
 
-    page = 1;
-    showStudents();
+        document.getElementById("name").value = "";
+        document.getElementById("grade").value = "";
+        document.getElementById("dob").value = "";
+        document.getElementById("address").value = "";
+        page = 1;
+        students = await Tracker.load("students");
+        showStudents();
+    } catch (error) {
+        Tracker.showBanner(Tracker.errorMessage(error));
+    } finally {
+        saving = false;
+    }
 }
 
-
-// Show students
 function showStudents() {
+    const rows = studentRows();
+    const start = (page - 1) * limit;
+    const pageRows = rows.slice(start, start + limit);
+    const list = document.getElementById("studentList");
 
-    let grade = document.getElementById("filter").value;
-
-    let sql = "SELECT * FROM students";
-
-    if (grade != "") {
-        sql += " WHERE grade = " + Number(grade);
+    if (rows.length === 0) {
+        list.innerHTML = '<tr><td colspan="6">No students yet.</td></tr>';
+        document.getElementById("pageNumber").innerText = "Page " + page;
+        return;
     }
 
-    sql += " ORDER BY " + sortColumn;
-    sql += ascending ? " ASC" : " DESC";
+    if (pageRows.length === 0 && page > 1) {
+        page = 1;
+        showStudents();
+        return;
+    }
 
-    let result = db.exec(sql);
+    list.innerHTML = pageRows.map(function (student, index) {
+        return "<tr>" +
+            "<td>" + (start + index + 1) + "</td>" +
+            "<td>" + Tracker.escape(student.name) + "</td>" +
+            "<td>" + Tracker.escape(student.grade) + "</td>" +
+            "<td>" + Tracker.escape(student.dob) + "</td>" +
+            "<td>" + Tracker.escape(student.address) + "</td>" +
+            "<td>" +
+            '<button class="edit" onclick="editStudent(\'' + student.id + "')\">✏ Edit</button> " +
+            '<button class="delete" onclick="deleteStudent(\'' + student.id + "')\">🗑 Delete</button>" +
+            "</td></tr>";
+    }).join("");
 
-    let students = result.length ? result[0].values : [];
+    document.getElementById("pageNumber").innerText = "Page " + page;
+}
 
-    let start = (page - 1) * limit;
-    let studentsPage = students.slice(start, start + limit);
-
-    let list = document.getElementById("studentList");
-
-    list.innerHTML = "";
-
-    studentsPage.forEach(function(s) {
-
-        list.innerHTML += `
-            <tr>
-                <td>${s[0]}</td>
-                <td>${s[1]}</td>
-                <td>${s[2]}</td>
-                <td>${s[3]}</td>
-                <td>${s[4]}</td>
-
-                <td>
-                    <button class="edit"
-                        onclick="editStudent(${s[0]})">
-                        ✏ Edit
-                    </button>
-
-                    <button class="delete"
-                        onclick="deleteStudent(${s[0]})">
-                        🗑 Delete
-                    </button>
-                </td>
-            </tr>
-        `;
+async function editStudent(id) {
+    const student = students.find(function (item) {
+        return item.id === id;
     });
 
-    document.getElementById("pageNumber").innerText =
-        "Page " + page;
-}
+    if (!student) {
+        return;
+    }
 
+    const name = prompt("Name:", student.name);
+    const grade = prompt("Grade:", student.grade);
+    const dob = prompt("Date of Birth:", student.dob || "");
+    const address = prompt("Address:", student.address || "");
 
-// Edit student
-function editStudent(roll) {
+    if (name == null || grade == null) {
+        return;
+    }
 
-    let result = db.exec(
-        "SELECT * FROM students WHERE roll = " + roll
-    );
-
-    let s = result[0].values[0];
-
-    let n = prompt("Name:", s[1]);
-    let g = prompt("Grade:", s[2]);
-    let d = prompt("Date of Birth:", s[3]);
-    let a = prompt("Address:", s[4]);
-
-    if (n != null && g != null) {
-
-        db.run(`
-            UPDATE students
-            SET name = ?, grade = ?, dob = ?, address = ?
-            WHERE roll = ?
-        `, [n, g, d, a, roll]);
-
+    try {
+        await Tracker.update("students", id, {
+            name: name,
+            grade: Number(grade),
+            dob: dob,
+            address: address
+        });
+        students = await Tracker.load("students");
         showStudents();
+    } catch (error) {
+        Tracker.showBanner(Tracker.errorMessage(error));
     }
 }
 
+async function deleteStudent(id) {
+    if (!confirm("Delete this student?")) {
+        return;
+    }
 
-// Delete student
-function deleteStudent(roll) {
-
-    if (confirm("Delete this student?")) {
-
-        db.run(
-            "DELETE FROM students WHERE roll = ?",
-            [roll]
-        );
-
+    try {
+        await Tracker.remove("students", id);
+        students = await Tracker.load("students");
         showStudents();
+    } catch (error) {
+        Tracker.showBanner(Tracker.errorMessage(error));
     }
 }
 
-
-// Sort table
 function sortStudents(column) {
-
-    if (sortColumn == column) {
+    if (sortColumn === column) {
         ascending = !ascending;
     } else {
         sortColumn = column;
@@ -305,79 +311,52 @@ function sortStudents(column) {
     showStudents();
 }
 
-
-// Previous page
 function previousPage() {
-
     if (page > 1) {
         page--;
         showStudents();
     }
 }
 
-
-// Next page
 function nextPage() {
-
-    let grade = document.getElementById("filter").value;
-
-    let sql = "SELECT COUNT(*) FROM students";
-
-    if (grade != "") {
-        sql += " WHERE grade = " + Number(grade);
-    }
-
-    let count = db.exec(sql)[0].values[0][0];
-
-    if (page * limit < count) {
+    if (page * limit < studentRows().length) {
         page++;
         showStudents();
     }
 }
 
-
-// Export CSV
 function exportCSV() {
-
-    let result = db.exec("SELECT * FROM students");
-
-    if (result.length == 0) {
+    if (!students.length) {
         alert("No students found!");
         return;
     }
 
     let csv = "Roll Number,Name,Grade,Date of Birth,Address\n";
 
-    result[0].values.forEach(function(s) {
-
+    students.forEach(function (student, index) {
         csv +=
-            s[0] + "," +
-            '"' + s[1].replace(/"/g, '""') + '",' +
-            s[2] + "," +
-            s[3] + "," +
-            '"' + s[4].replace(/"/g, '""') + '"' +
-            "\n";
+            (index + 1) + "," +
+            '"' + String(student.name).replace(/"/g, '""') + '",' +
+            student.grade + "," +
+            (student.dob || "") + "," +
+            '"' + String(student.address || "").replace(/"/g, '""') + '"\n';
     });
 
-    let blob = new Blob([csv], {
-        type: "text/csv;charset=utf-8;"
-    });
-
-    let url = URL.createObjectURL(blob);
-
-    let a = document.createElement("a");
-    a.href = url;
-    a.download = "students.csv";
-
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "students.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
 }
 
-
+Tracker.onReady(async function () {
+    students = await Tracker.load("students");
+    showStudents();
+});
 </script>
-
 </body>
 </html>

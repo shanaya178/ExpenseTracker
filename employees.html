@@ -1,71 +1,30 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee List</title>
 
-    <!-- Tailwind + DaisyUI -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
-
-    <script>
-        let employees = [];
-
-        function onLoad() {
-            employees =
-                JSON.parse(localStorage.getItem("employees") ?? "[]");
-
-            loadEmployeesInList();
-        }
-
-        function addEmployee() {
-
-            let employee = {
-                name: document.getElementById("name").value,
-                salary: document.getElementById("salary").value,
-                experience: document.getElementById("experience").value,
-                dob: document.getElementById("dob").value
-            };
-
-            employees.push(employee);
-
-            localStorage.setItem(
-                "employees",
-                JSON.stringify(employees)
-            );
-
-            loadEmployeesInList();
-
-            // Clear form
-            document.getElementById("employeeForm").reset();
-        }
-
-        function loadEmployeesInList() {
-
-            let htmlString = "";
-
-            employees.forEach((employee, index) => {
-
-                htmlString += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${employee.name}</td>
-                        <td>₹${employee.salary}</td>
-                        <td>${employee.experience} years</td>
-                        <td>${employee.dob}</td>
-                    </tr>
-                `;
-            });
-
-            document.getElementById("employeeList").innerHTML =
-                htmlString;
-        }
-    </script>
+    <link rel="stylesheet" href="css/auth.css">
 </head>
 
+<body class="bg-base-200 min-h-screen p-8">
 
-<body onload="onLoad()" class="bg-base-200 min-h-screen p-8">
+    <div id="auth-gate">
+        <div class="auth-card">
+            <p class="auth-kicker">My Dashboard</p>
+            <h1 id="auth-title">Sign in to continue</h1>
+            <p id="auth-status">Checking your Google session…</p>
+            <button id="google-sign-in" type="button" hidden>
+                <span class="g-logo" aria-hidden="true"></span>
+                Sign in with Google
+            </button>
+            <p id="auth-error" role="alert"></p>
+        </div>
+    </div>
 
     <div class="max-w-5xl mx-auto">
 
@@ -73,119 +32,67 @@
             Employee Survey
         </h1>
 
-
-        <!-- FORM -->
+        <div class="stats bg-base-100 shadow mb-8 w-full">
+            <div class="stat">
+                <div class="stat-title">Total employees</div>
+                <div id="employeeCount" class="stat-value text-primary">0</div>
+                <div id="employeeHint" class="stat-desc">Saved for this Google account</div>
+            </div>
+        </div>
 
         <div class="card bg-base-100 shadow-xl mb-10">
-
             <div class="card-body">
+                <h2 class="card-title mb-4">Add Employee</h2>
 
-                <h2 class="card-title mb-4">
-                    Add Employee
-                </h2>
-
-                <form id="employeeForm"
-                      onsubmit="event.preventDefault(); addEmployee()">
-
-                    <!-- NAME -->
-
+                <form id="employeeForm" onsubmit="event.preventDefault(); addEmployee()">
                     <label class="form-control mb-4">
                         <div class="label">
                             <span class="label-text">Employee Name</span>
                         </div>
-
-                        <input
-                            id="name"
-                            type="text"
-                            placeholder="Enter employee name"
-                            class="input input-bordered"
-                            required
-                        />
+                        <input id="name" type="text" placeholder="Enter employee name" class="input input-bordered" required>
                     </label>
-
-
-                    <!-- SALARY -->
 
                     <label class="form-control mb-4">
                         <div class="label">
                             <span class="label-text">Salary</span>
                         </div>
-
-                        <input
-                            id="salary"
-                            type="number"
-                            placeholder="Enter salary"
-                            class="input input-bordered"
-                            required
-                        />
+                        <input id="salary" type="number" placeholder="Enter salary" class="input input-bordered" required>
                     </label>
-
-
-                    <!-- EXPERIENCE -->
 
                     <label class="form-control mb-4">
                         <div class="label">
                             <span class="label-text">Experience</span>
                         </div>
-
-                        <input
-                            id="experience"
-                            type="number"
-                            placeholder="Years of experience"
-                            class="input input-bordered"
-                            min="0"
-                            required
-                        />
+                        <input id="experience" type="number" placeholder="Years of experience" class="input input-bordered" min="0" required>
                     </label>
-
-
-                    <!-- DOB -->
 
                     <label class="form-control mb-6">
                         <div class="label">
-                            <span class="label-text">
-                                Date of Birth
-                            </span>
+                            <span class="label-text">Date of Birth</span>
                         </div>
-
-                        <input
-                            id="dob"
-                            type="date"
-                            class="input input-bordered"
-                            required
-                        />
+                        <input id="dob" type="date" class="input input-bordered" required>
                     </label>
 
-
-                    <!-- BUTTON -->
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary w-full">
+                    <button id="addEmployeeButton" type="submit" class="btn btn-primary w-full">
                         Add Employee
                     </button>
-
                 </form>
-
             </div>
         </div>
 
-
-
-        <!-- EMPLOYEE LIST -->
-
         <div class="card bg-base-100 shadow-xl">
-
             <div class="card-body">
+                <h2 class="card-title mb-4">Employee List</h2>
 
-                <h2 class="card-title mb-4">
-                    Employee List
-                </h2>
+                <label class="form-control mb-4">
+                    <div class="label">
+                        <span class="label-text">Search employees</span>
+                    </div>
+                    <input id="search" type="search" placeholder="Search by name" class="input input-bordered" oninput="loadEmployeesInList()">
+                </label>
 
                 <div class="overflow-x-auto">
-
                     <table class="table table-zebra">
-
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -195,18 +102,85 @@
                                 <th>DOB</th>
                             </tr>
                         </thead>
-
-                        <tbody id="employeeList">
-                        </tbody>
-
+                        <tbody id="employeeList"></tbody>
                     </table>
-
                 </div>
-
             </div>
         </div>
 
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
+    <script src="js/tracker.js"></script>
+    <script>
+        let employees = [];
+        let saving = false;
+
+        async function addEmployee() {
+            if (saving) {
+                return;
+            }
+
+            const employee = {
+                name: document.getElementById("name").value.trim(),
+                salary: document.getElementById("salary").value,
+                experience: document.getElementById("experience").value,
+                dob: document.getElementById("dob").value
+            };
+
+            saving = true;
+            document.getElementById("addEmployeeButton").disabled = true;
+
+            try {
+                await Tracker.add("employees", employee);
+                document.getElementById("employeeForm").reset();
+                employees = await Tracker.load("employees");
+                loadEmployeesInList();
+            } catch (error) {
+                Tracker.showBanner(Tracker.errorMessage(error));
+            } finally {
+                saving = false;
+                document.getElementById("addEmployeeButton").disabled = false;
+            }
+        }
+
+        function loadEmployeesInList() {
+            const query = document.getElementById("search").value.trim().toLowerCase();
+            const visible = employees.filter(function (employee) {
+                return employee.name.toLowerCase().includes(query);
+            });
+
+            document.getElementById("employeeCount").textContent = String(employees.length);
+            document.getElementById("employeeHint").textContent = query
+                ? "Showing " + visible.length + " of " + employees.length
+                : "Saved in Firestore for this Google account";
+
+            if (visible.length === 0) {
+                document.getElementById("employeeList").innerHTML =
+                    '<tr><td colspan="5" class="text-center">' +
+                    (employees.length === 0 ? "No employees yet." : "No employees match that search.") +
+                    "</td></tr>";
+                return;
+            }
+
+            document.getElementById("employeeList").innerHTML = visible.map(function (employee, index) {
+                return "<tr>" +
+                    "<td>" + (index + 1) + "</td>" +
+                    "<td>" + Tracker.escape(employee.name) + "</td>" +
+                    "<td>₹" + Tracker.escape(employee.salary) + "</td>" +
+                    "<td>" + Tracker.escape(employee.experience) + " years</td>" +
+                    "<td>" + Tracker.escape(employee.dob) + "</td>" +
+                    "</tr>";
+            }).join("");
+        }
+
+        Tracker.onReady(async function () {
+            await Tracker.migrateLocalList("employees", "employees");
+            employees = await Tracker.load("employees");
+            loadEmployeesInList();
+        });
+    </script>
 </body>
 </html>

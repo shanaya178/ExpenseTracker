@@ -1,0 +1,232 @@
+.form-control {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.form-control .input,
+.form-control .select,
+.form-control textarea {
+  width: 100%;
+}
+
+#auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.18), transparent 28%),
+    linear-gradient(160deg, #312e81, #4f46e5 55%, #0f172a);
+  color: #eef2ff;
+}
+
+body.signed-in #auth-gate {
+  display: none !important;
+}
+
+body:not(.signed-in) > :not(#auth-gate) {
+  display: none !important;
+}
+
+.auth-card {
+  width: min(440px, 100%);
+  padding: 32px 28px;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+}
+
+.auth-kicker {
+  margin: 0 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c7d2fe;
+}
+
+.auth-card h1 {
+  margin: 0 0 12px;
+  font-size: 32px;
+  line-height: 1.15;
+  color: white;
+}
+
+#auth-status {
+  margin: 0 0 22px;
+  color: #e0e7ff;
+  line-height: 1.5;
+}
+
+#google-sign-in {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: white;
+  color: #1f2937;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#google-sign-in[hidden] {
+  display: none;
+}
+
+#google-sign-in:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.g-logo {
+  width: 18px;
+  height: 18px;
+  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23FFC107' d='M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3.1l5.7-5.7C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z'/%3E%3Cpath fill='%23FF3D00' d='M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3.1 0 5.8 1.2 8 3.1l5.7-5.7C34.2 6.1 29.4 4 24 4 16.3 4 9.6 8.3 6.3 14.7z'/%3E%3Cpath fill='%234CAF50' d='M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z'/%3E%3Cpath fill='%231976D2' d='M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.3 4.2-4.1 5.5l.1.1 6.3 5.3C39.2 37.3 44 32 44 24c0-1.2-.1-2.3-.4-3.5z'/%3E%3C/svg%3E");
+}
+
+#auth-error {
+  min-height: 1.25em;
+  margin: 14px 0 0;
+  color: #fecaca;
+  line-height: 1.4;
+}
+
+#user-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 60px;
+  padding: 10px 18px;
+  background: #111827;
+  color: white;
+}
+
+body.signed-in {
+  padding-top: 60px !important;
+}
+
+body.signed-in .sidebar {
+  top: 60px;
+  height: calc(100vh - 60px);
+}
+
+#user-bar .brand {
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.user-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+#user-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+#user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #4f46e5;
+}
+
+#sign-out {
+  width: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: white;
+  color: #111827;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#data-loading {
+  position: fixed;
+  inset: 60px 0 0 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 247, 251, 0.94);
+  color: #312e81;
+  font: 600 18px Arial, Helvetica, sans-serif;
+}
+
+#data-loading[hidden] {
+  display: none !important;
+}
+
+#app-banner {
+  position: sticky;
+  top: 60px;
+  z-index: 70;
+  margin: 0;
+  padding: 12px 16px;
+  background: #7f1d1d;
+  color: white;
+}
+
+#app-banner[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  body.signed-in {
+    padding-top: 0 !important;
+  }
+
+  body.signed-in .sidebar {
+    position: relative;
+    top: auto;
+    width: 100%;
+    height: auto;
+  }
+
+  #user-bar {
+    position: sticky;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .user-meta {
+    width: 100%;
+  }
+
+  #user-label {
+    flex: 1;
+  }
+
+  .auth-card h1 {
+    font-size: 28px;
+  }
+}

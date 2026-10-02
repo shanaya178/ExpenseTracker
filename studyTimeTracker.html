@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Study Tracker</title>
-
+    <link rel="stylesheet" href="css/auth.css">
     <style>
         * {
             box-sizing: border-box;
@@ -74,13 +73,30 @@
         .delete {
             background: #ef4444;
         }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            margin-top: 20px;
+        }
     </style>
 </head>
-
 <body>
 
-<div class="container">
+<div id="auth-gate">
+    <div class="auth-card">
+        <p class="auth-kicker">My Dashboard</p>
+        <h1 id="auth-title">Sign in to continue</h1>
+        <p id="auth-status">Checking your Google session…</p>
+        <button id="google-sign-in" type="button" hidden>
+            <span class="g-logo" aria-hidden="true"></span>
+            Sign in with Google
+        </button>
+        <p id="auth-error" role="alert"></p>
+    </div>
+</div>
 
+<div class="container">
     <h1>📖 Study Time Tracker</h1>
 
     <div class="total">
@@ -89,73 +105,98 @@
     </div>
 
     <div class="form">
-
         <input id="subject" placeholder="Subject">
-
-        <input id="time" type="number"
-               placeholder="Study time in minutes">
-
+        <input id="time" type="number" placeholder="Study time in minutes">
         <input id="date" type="date">
-
-        <button onclick="addSession()">
-            Add Study Session
-        </button>
-
+        <button onclick="addSession()">Add Study Session</button>
     </div>
 
     <div id="sessionList"></div>
-
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
+<script src="js/tracker.js"></script>
 <script>
+    let sessions = [];
+    let saving = false;
 
-    let totalMinutes = 0;
+    function renderSessions() {
+        const totalMinutes = sessions.reduce(function (sum, session) {
+            return sum + Number(session.minutes || 0);
+        }, 0);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
 
-    function addSession() {
+        document.getElementById("totalHours").innerText =
+            hours + " hours " + minutes + " minutes";
 
-        let subject = document.getElementById("subject").value;
-        let time = Number(document.getElementById("time").value);
-        let date = document.getElementById("date").value;
+        const list = document.getElementById("sessionList");
 
-        if (subject === "" || time === 0 || date === "") {
+        if (sessions.length === 0) {
+            list.innerHTML = '<p class="empty">No study sessions yet.</p>';
+            return;
+        }
+
+        list.innerHTML = sessions.map(function (session) {
+            return '<div class="session">' +
+                "<h3>📚 " + Tracker.escape(session.subject) + "</h3>" +
+                "<p>⏱️ " + Tracker.escape(session.minutes) + " minutes</p>" +
+                "<p>📅 " + Tracker.escape(session.date) + "</p>" +
+                '<button class="delete" onclick="deleteSession(\'' + session.id + "')\">Delete</button>" +
+                "</div>";
+        }).join("");
+    }
+
+    async function addSession() {
+        if (saving) {
+            return;
+        }
+
+        const subject = document.getElementById("subject").value.trim();
+        const time = Number(document.getElementById("time").value);
+        const date = document.getElementById("date").value;
+
+        if (!subject || !time || !date) {
             alert("Please fill all fields");
             return;
         }
 
-        totalMinutes += time;
+        saving = true;
 
-        let hours = Math.floor(totalMinutes / 60);
-        let minutes = totalMinutes % 60;
-
-        document.getElementById("totalHours").innerText =
-            `${hours} hours ${minutes} minutes`;
-
-        let session = document.createElement("div");
-
-        session.className = "session";
-
-        session.innerHTML = `
-            <h3>📚 ${subject}</h3>
-
-            <p>⏱️ ${time} minutes</p>
-
-            <p>📅 ${date}</p>
-
-            <button class="delete"
-                onclick="this.parentElement.remove()">
-                Delete
-            </button>
-        `;
-
-        document.getElementById("sessionList")
-            .appendChild(session);
-
-        document.getElementById("subject").value = "";
-        document.getElementById("time").value = "";
-        document.getElementById("date").value = "";
+        try {
+            await Tracker.add("studies", {
+                subject: subject,
+                minutes: time,
+                date: date
+            });
+            document.getElementById("subject").value = "";
+            document.getElementById("time").value = "";
+            document.getElementById("date").value = "";
+            sessions = await Tracker.load("studies");
+            renderSessions();
+        } catch (error) {
+            Tracker.showBanner(Tracker.errorMessage(error));
+        } finally {
+            saving = false;
+        }
     }
 
-</script>
+    async function deleteSession(id) {
+        try {
+            await Tracker.remove("studies", id);
+            sessions = await Tracker.load("studies");
+            renderSessions();
+        } catch (error) {
+            Tracker.showBanner(Tracker.errorMessage(error));
+        }
+    }
 
+    Tracker.onReady(async function () {
+        sessions = await Tracker.load("studies");
+        renderSessions();
+    });
+</script>
 </body>
 </html>

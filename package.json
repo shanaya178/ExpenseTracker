@@ -1,0 +1,9 @@
+{
+  "name": "personal-dashboard",
+  "private": true,
+  "description": "Personal dashboard for books, employees, expenses, students, studies, medicines, and screen time.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}
