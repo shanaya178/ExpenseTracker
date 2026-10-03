@@ -3,361 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>My Dashboard</title>
-    <link rel="stylesheet" href="css/auth.css">
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        body {
-            background: #f4f7fb;
-            color: #1f2937;
-            min-height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 240px;
-            height: 100vh;
-            background: linear-gradient(180deg, #4f46e5, #312e81);
-            color: white;
-            padding: 30px 20px;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .sidebar p {
-            font-size: 13px;
-            color: #c7d2fe;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .nav a {
-            display: block;
-            text-decoration: none;
-            color: white;
-            padding: 14px 16px;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            transition: 0.3s;
-        }
-
-        .nav a:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateX(5px);
-        }
-
-        /* Main Content */
-        .main {
-            margin-left: 240px;
-            padding: 40px;
-        }
-
-        .header {
-            margin-bottom: 35px;
-        }
-
-        .header h1 {
-            font-size: 32px;
-            margin-bottom: 8px;
-            color: #111827;
-        }
-
-        .header p {
-            color: #6b7280;
-            font-size: 16px;
-        }
-
-        /* Cards */
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 25px;
-            max-width: 1000px;
-        }
-
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 18px;
-            text-decoration: none;
-            color: #1f2937;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
-            transition: 0.3s ease;
-            border: 1px solid #e5e7eb;
-        }
-
-        .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-        }
-
-        .icon {
-            width: 55px;
-            height: 55px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 25px;
-            margin-bottom: 20px;
-        }
-
-        .books {
-            background: #ede9fe;
-        }
-
-        .employees {
-            background: #dcfce7;
-        }
-
-        .expenses {
-            background: #fef3c7;
-        }
-
-        .students {
-            background: #dbeafe;
-        }
-
-        .medicines {
-            background: #fce7f3;
-        }
-
-        .screentime {
-            background: #e0f2fe;
-        }
-
-        .card h2 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        .card p {
-            color: #6b7280;
-            line-height: 1.5;
-        }
-
-        .arrow {
-            display: inline-block;
-            margin-top: 20px;
-            color: #4f46e5;
-            font-weight: bold;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .sidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
-                padding: 20px;
-            }
-
-            .logo {
-                margin-bottom: 20px;
-            }
-
-            .nav {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .nav a {
-                margin: 0;
-            }
-
-            .main {
-                margin-left: 0;
-                padding: 25px;
-            }
-
-            .cards {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/site.css">
 </head>
-
 <body>
-
-    <div id="auth-gate">
-        <div class="auth-card">
-            <p class="auth-kicker">My Dashboard</p>
-            <h1 id="auth-title">Sign in to continue</h1>
-            <p id="auth-status">Checking your Google session…</p>
-            <button id="google-sign-in" type="button" hidden>
-                <span class="g-logo" aria-hidden="true"></span>
-                Sign in with Google
-            </button>
-            <p id="auth-error" role="alert"></p>
-        </div>
-    </div>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-
-        <div class="logo">
-            📊 My Dashboard
-        </div>
-
-        <p>Navigation</p>
-
-        <nav class="nav">
-            <a href="books.html">📚 Library</a>
-            <a href="employees.html">👨‍💼 Employees</a>
-            <a href="expenses.html">💰 Expenses</a>
-            <a href="students.html">🎓 Students</a>
-            <a href="studyTimeTracker.html">📖 Studies</a>
-            <a href="medicineTracker.html">💊 Medicines</a>
-            <a href="screenTimeTracker.html">📱 Screen Time</a>
+    <header class="site-header">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">✿</span>
+            My Dashboard
+        </a>
+        <nav class="site-nav" aria-label="Trackers">
+            <a href="books.html">Library</a>
+            <a href="employees.html">Employees</a>
+            <a href="expenses.html">Expenses</a>
+            <a href="students.html">Students</a>
+            <a href="studyTimeTracker.html">Studies</a>
+            <a href="medicineTracker.html">Medicines</a>
+            <a class="screen-link" href="screenTimeTracker.html">Screen Time</a>
         </nav>
+    </header>
 
-    </aside>
+    <section class="hero">
+        <div>
+            <p class="eyebrow">A home for everyday lists</p>
+            <h1>Look around first. Sign in when you open a tracker.</h1>
+            <p class="lede">Library, employees, expenses, students, studies, medicines, and screen time all live here. The pages below are open to browse. Google sign-in starts only after you choose one.</p>
+        </div>
+        <div class="hero-card" aria-hidden="true">
+            <div class="float-note note-a">
+                <strong>Students</strong>
+                <span>Names, grades, and addresses</span>
+            </div>
+            <div class="float-note note-b">
+                <strong>Screen Time</strong>
+                <span>Minutes by app and category</span>
+            </div>
+        </div>
+    </section>
 
-
-    <!-- Main Content -->
-    <main class="main">
-
-        <div class="header">
-            <h1>Welcome to My Dashboard 👋</h1>
-            <p>Manage your books, employees, expenses, students, studies, medicines and screen time.</p>
+    <section class="trackers" id="trackers">
+        <div class="section-head">
+            <h2>Choose a tracker</h2>
+            <p>Each one keeps its own list in your Google account after you sign in.</p>
         </div>
 
-
-        <section class="cards">
-
-            <!-- Books -->
-            <a href="books.html" class="card">
-                <div class="icon books">📚</div>
-
-                <h2>My Library</h2>
-
-                <p>
-                    View and manage your library and
-                    keep track of your reading projects.
-                </p>
-
-                <span class="arrow">Open Library →</span>
+        <div class="tracker-grid">
+            <a class="tracker" href="books.html">
+                <div class="tracker-icon lilac">📚</div>
+                <h3>Library</h3>
+                <p>Books you want, books you are reading, and the ones you finished.</p>
+                <span class="open">Open library</span>
             </a>
 
-
-            <!-- Employees -->
-            <a href="employees.html" class="card">
-                <div class="icon employees">👨‍💼</div>
-
-                <h2>Employees</h2>
-
-                <p>
-                    View your working employees and manage
-                    employee-related information.
-                </p>
-
-                <span class="arrow">View Employees →</span>
+            <a class="tracker" href="employees.html">
+                <div class="tracker-icon mint">🌿</div>
+                <h3>Employees</h3>
+                <p>Names, salaries, experience, and a search across the whole list.</p>
+                <span class="open">Open employees</span>
             </a>
 
-
-            <!-- Expenses -->
-            <a href="expenses.html" class="card">
-                <div class="icon expenses">💰</div>
-
-                <h2>My Expenses</h2>
-
-                <p>
-                    Keep track of your expenses and monitor
-                    your spending information.
-                </p>
-
-                <span class="arrow">View Expenses →</span>
+            <a class="tracker" href="expenses.html">
+                <div class="tracker-icon peach">🪙</div>
+                <h3>Expenses</h3>
+                <p>Bills and spending, with totals by category and month.</p>
+                <span class="open">Open expenses</span>
             </a>
 
-
-            <!-- Students -->
-            <a href="students.html" class="card">
-                <div class="icon students">🎓</div>
-
-                <h2>Students</h2>
-
-                <p>
-                    View and manage your students list and
-                    student-related information.
-                </p>
-
-                <span class="arrow">View Students →</span>
+            <a class="tracker" href="students.html">
+                <div class="tracker-icon sky">🎓</div>
+                <h3>Students</h3>
+                <p>A class list with grades, birthdays, addresses, and CSV export.</p>
+                <span class="open">Open students</span>
             </a>
 
-            <!-- Studies-->
-            <a href="studyTimeTracker.html" class="card">
-                <div class="icon students">🎓</div>
-
-                <h2>Studies</h2>
-
-                <p>
-                    Have a look at what all you have 
-                    studied.
-                </p>
-
-                <span class="arrow">View subjects studied →</span>
+            <a class="tracker" href="studyTimeTracker.html">
+                <div class="tracker-icon blush">⏳</div>
+                <h3>Studies</h3>
+                <p>Study sessions by subject, with a running total of your hours.</p>
+                <span class="open">Open studies</span>
             </a>
 
-
-            <!-- Medicines -->
-            <a href="medicineTracker.html" class="card">
-                <div class="icon medicines">💊</div>
-
-                <h2>Medicines</h2>
-
-                <p>
-                    Track medicines, dosages, timings and
-                    remaining quantity in one place.
-                </p>
-
-                <span class="arrow">Open Medicine Tracker →</span>
+            <a class="tracker" href="medicineTracker.html">
+                <div class="tracker-icon rose">💊</div>
+                <h3>Medicines</h3>
+                <p>Dosage, timing, and how much of each medicine is left.</p>
+                <span class="open">Open medicines</span>
             </a>
 
-
-            <!-- Screen Time -->
-            <a href="screenTimeTracker.html" class="card">
-                <div class="icon screentime">📱</div>
-
-                <h2>Screen Time</h2>
-
-                <p>
-                    Track time spent on apps and websites
-                    and see totals by category.
-                </p>
-
-                <span class="arrow">Open Screen Time Tracker →</span>
+            <a class="tracker screen" href="screenTimeTracker.html">
+                <div class="tracker-icon aqua">📱</div>
+                <h3>Screen Time</h3>
+                <p>Time on apps and websites, totaled by category and by day.</p>
+                <span class="open">Open screen time</span>
             </a>
+        </div>
+    </section>
 
+    <section class="how">
+        <article>
+            <strong>1. Browse</strong>
+            <p>This page stays open. You can see every tracker, including screen time, before you sign in.</p>
+        </article>
+        <article>
+            <strong>2. Open one</strong>
+            <p>Choosing Students, Screen Time, or any other tracker asks you to continue with Google.</p>
+        </article>
+        <article>
+            <strong>3. Keep your list</strong>
+            <p>After sign-in, that tracker’s records stay with your Google account.</p>
+        </article>
+    </section>
 
-        </section>
-
-    </main>
-
-    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
-    <script src="js/tracker.js"></script>
-    <script>
-        Tracker.onReady(function () {});
-    </script>
-
+    <footer class="site-footer">
+        My Dashboard · library, people, money, study, health, and screen time
+    </footer>
 </body>
 </html>
