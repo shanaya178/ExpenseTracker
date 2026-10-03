@@ -323,6 +323,16 @@
     deliver(user);
   }
 
+  const authCard = document.querySelector("#auth-gate .auth-card");
+
+  if (authCard && !authCard.querySelector(".auth-back")) {
+    const back = document.createElement("a");
+    back.className = "auth-back";
+    back.href = "index.html";
+    back.textContent = "Back to the website";
+    authCard.appendChild(back);
+  }
+
   const button = document.getElementById("google-sign-in");
 
   if (button) {

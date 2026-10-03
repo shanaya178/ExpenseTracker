@@ -1,6 +1,6 @@
 # Personal Dashboard
 
-A small set of pages for a personal library, employees, expenses, students, study time, medicines, and screen time. Every page stays behind Google sign-in. Records are stored in Cloud Firestore for the signed-in user, using the Firebase project already configured for this app.
+A small website for a personal library, employees, expenses, students, study time, medicines, and screen time. The homepage is open. Google sign-in starts when a tracker is opened, and that tracker’s records are stored in Cloud Firestore for the signed-in user.
 
 ## Run it locally
 
@@ -15,7 +15,7 @@ Then open [http://localhost:43123](http://localhost:43123).
 ## Sign-in and data
 
 - Google sign-in uses the Firebase config in `js/tracker.js` (`techcoderlabz-project`).
-- Until sign-in finishes, the page content is hidden and only the sign-in screen is shown.
+- The homepage lists every tracker without signing in. Google sign-in appears after you open a tracker.
 - Each record lives under `users/{uid}/...` in Firestore. Collections are `books`, `employees`, `expenses`, `students`, `studies`, `medicines`, and `screenTime`.
 - Existing `localStorage` lists for employees, expenses, medicines, and screen time are copied into Firestore once, then removed from the browser.
 
