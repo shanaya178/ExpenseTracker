@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Book Tracker</title>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Library</title>
+    <link rel="stylesheet" href="css/auth.css">
     <style>
         body {
             font-family: Arial;
@@ -88,14 +88,29 @@
             text-align: center;
             margin-top: 20px;
         }
+
+        .empty {
+            padding: 16px;
+        }
     </style>
 </head>
-
 <body>
 
-<div class="box">
+<div id="auth-gate">
+    <div class="auth-card">
+        <p class="auth-kicker">My Dashboard</p>
+        <h1 id="auth-title">Sign in to continue</h1>
+        <p id="auth-status">Checking your Google session…</p>
+        <button id="google-sign-in" type="button" hidden>
+            <span class="g-logo" aria-hidden="true"></span>
+            Sign in with Google
+        </button>
+        <p id="auth-error" role="alert"></p>
+    </div>
+</div>
 
-    <h1>📚 My Book Tracker 💜</h1>
+<div class="box">
+    <h1>📚 My Library 💜</h1>
 
     <input id="title" placeholder="Book Name">
     <input id="author" placeholder="Author">
@@ -106,15 +121,14 @@
         <option>Completed</option>
     </select>
 
-    <input id="rating" type="number" min="1" max="5"
-           placeholder="Rating 1-5">
+    <input id="rating" type="number" min="1" max="5" placeholder="Rating 1-5">
 
     <button onclick="addBook()">➕ Add Book</button>
     <button class="csv" onclick="exportCSV()">📥 CSV</button>
 
     <br><br>
 
-    <select id="filter" onchange="showBooks()">
+    <select id="filter" onchange="page = 1; showBooks()">
         <option value="">All Books</option>
         <option>Want to Read</option>
         <option>Reading</option>
@@ -132,7 +146,6 @@
                 <th>Actions</th>
             </tr>
         </thead>
-
         <tbody id="bookList"></tbody>
     </table>
 
@@ -141,171 +154,171 @@
         <b id="page">Page 1</b>
         <button onclick="next()">Next ➡</button>
     </div>
-
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
+<script src="js/tracker.js"></script>
 <script>
-
-let db;
+let books = [];
 let page = 1;
 let limit = 20;
 let sortColumn = "id";
 let ascending = true;
+let saving = false;
 
+function bookRows() {
+    const filter = document.getElementById("filter").value;
+    let rows = books.slice();
 
-// Start SQL.js
-initSqlJs({
-    locateFile: file =>
-        "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/" + file
-}).then(function(SQL) {
+    if (filter) {
+        rows = rows.filter(function (book) {
+            return book.status === filter;
+        });
+    }
 
-    db = new SQL.Database();
+    const direction = ascending ? 1 : -1;
 
-    db.run(`
-        CREATE TABLE books (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            author TEXT,
-            status TEXT,
-            rating INTEGER
-        )
-    `);
+    rows.sort(function (a, b) {
+        if (sortColumn === "id") {
+            return (books.indexOf(a) - books.indexOf(b)) * direction;
+        }
 
-    showBooks();
-});
+        const left = a[sortColumn] ?? "";
+        const right = b[sortColumn] ?? "";
 
+        if (sortColumn === "rating") {
+            return ((Number(left) || 0) - (Number(right) || 0)) * direction;
+        }
 
-// Add a book
-function addBook() {
+        return String(left).localeCompare(String(right)) * direction;
+    });
 
-    let title = document.getElementById("title").value;
-    let author = document.getElementById("author").value;
-    let status = document.getElementById("status").value;
-    let rating = document.getElementById("rating").value;
+    return rows;
+}
 
-    if (title == "") {
+async function addBook() {
+    if (saving) {
+        return;
+    }
+
+    const title = document.getElementById("title").value.trim();
+    const author = document.getElementById("author").value.trim();
+    const status = document.getElementById("status").value;
+    const ratingRaw = document.getElementById("rating").value;
+
+    if (!title) {
         alert("Please enter the book name!");
         return;
     }
 
-    db.run(
-        `INSERT INTO books(title, author, status, rating)
-         VALUES (?, ?, ?, ?)`,
-        [title, author, status, rating]
-    );
+    saving = true;
 
-    document.getElementById("title").value = "";
-    document.getElementById("author").value = "";
-    document.getElementById("rating").value = "";
+    try {
+        await Tracker.add("books", {
+            title: title,
+            author: author,
+            status: status,
+            rating: ratingRaw === "" ? null : Number(ratingRaw)
+        });
 
-    page = 1;
-    showBooks();
+        document.getElementById("title").value = "";
+        document.getElementById("author").value = "";
+        document.getElementById("rating").value = "";
+        page = 1;
+        books = await Tracker.load("books");
+        showBooks();
+    } catch (error) {
+        Tracker.showBanner(Tracker.errorMessage(error));
+    } finally {
+        saving = false;
+    }
 }
 
-
-// Show books
 function showBooks() {
+    const rows = bookRows();
+    const start = (page - 1) * limit;
+    const data = rows.slice(start, start + limit);
+    const list = document.getElementById("bookList");
 
-    let filter = document.getElementById("filter").value;
-
-    let sql = "SELECT * FROM books";
-
-    if (filter != "") {
-        sql += " WHERE status = '" + filter + "'";
+    if (rows.length === 0) {
+        list.innerHTML = '<tr><td class="empty" colspan="6">No books in this library yet.</td></tr>';
+        document.getElementById("page").innerText = "Page " + page;
+        return;
     }
 
-    sql += " ORDER BY " + sortColumn;
-    sql += ascending ? " ASC" : " DESC";
+    if (data.length === 0 && page > 1) {
+        page = 1;
+        showBooks();
+        return;
+    }
 
-    let result = db.exec(sql);
-    let books = result.length ? result[0].values : [];
+    list.innerHTML = data.map(function (book, index) {
+        const rating = book.rating ? "⭐ " + Tracker.escape(book.rating) : "⭐ -";
+        return "<tr>" +
+            "<td>" + (start + index + 1) + "</td>" +
+            "<td>📖 " + Tracker.escape(book.title) + "</td>" +
+            "<td>" + Tracker.escape(book.author) + "</td>" +
+            "<td>" + Tracker.escape(book.status) + "</td>" +
+            "<td>" + rating + "</td>" +
+            "<td>" +
+            '<button class="edit" onclick="editBook(\'' + book.id + "')\">✏ Edit</button> " +
+            '<button class="delete" onclick="deleteBook(\'' + book.id + "')\">🗑 Delete</button>" +
+            "</td></tr>";
+    }).join("");
 
-    let start = (page - 1) * limit;
-    let data = books.slice(start, start + limit);
+    document.getElementById("page").innerText = "Page " + page;
+}
 
-    let list = document.getElementById("bookList");
-
-    list.innerHTML = "";
-
-    data.forEach(function(book) {
-
-        list.innerHTML += `
-            <tr>
-                <td>${book[0]}</td>
-                <td>📖 ${book[1]}</td>
-                <td>${book[2]}</td>
-                <td>${book[3]}</td>
-                <td>⭐ ${book[4] || "-"}</td>
-
-                <td>
-                    <button class="edit"
-                        onclick="editBook(${book[0]})">
-                        ✏ Edit
-                    </button>
-
-                    <button class="delete"
-                        onclick="deleteBook(${book[0]})">
-                        🗑 Delete
-                    </button>
-                </td>
-            </tr>
-        `;
+async function editBook(id) {
+    const book = books.find(function (item) {
+        return item.id === id;
     });
 
-    document.getElementById("page").innerText =
-        "Page " + page;
-}
+    if (!book) {
+        return;
+    }
 
+    const title = prompt("Book name:", book.title);
+    const author = prompt("Author:", book.author || "");
+    const status = prompt("Status (Want to Read / Reading / Completed):", book.status || "");
+    const rating = prompt("Rating 1-5:", book.rating ?? "");
 
-// Edit book
-function editBook(id) {
+    if (title == null) {
+        return;
+    }
 
-    let result = db.exec(
-        "SELECT * FROM books WHERE id = " + id
-    );
-
-    let book = result[0].values[0];
-
-    let title = prompt("Book name:", book[1]);
-    let author = prompt("Author:", book[2]);
-    let status = prompt(
-        "Status (Want to Read / Reading / Completed):",
-        book[3]
-    );
-    let rating = prompt("Rating 1-5:", book[4]);
-
-    if (title != null) {
-
-        db.run(`
-            UPDATE books
-            SET title=?, author=?, status=?, rating=?
-            WHERE id=?
-        `, [title, author, status, rating, id]);
-
+    try {
+        await Tracker.update("books", id, {
+            title: title,
+            author: author,
+            status: status,
+            rating: rating === "" || rating == null ? null : Number(rating)
+        });
+        books = await Tracker.load("books");
         showBooks();
+    } catch (error) {
+        Tracker.showBanner(Tracker.errorMessage(error));
     }
 }
 
+async function deleteBook(id) {
+    if (!confirm("Delete this book?")) {
+        return;
+    }
 
-// Delete book
-function deleteBook(id) {
-
-    if (confirm("Delete this book?")) {
-
-        db.run(
-            "DELETE FROM books WHERE id=?",
-            [id]
-        );
-
+    try {
+        await Tracker.remove("books", id);
+        books = await Tracker.load("books");
         showBooks();
+    } catch (error) {
+        Tracker.showBanner(Tracker.errorMessage(error));
     }
 }
 
-
-// Sort books
 function sortBooks(column) {
-
-    if (sortColumn == column) {
+    if (sortColumn === column) {
         ascending = !ascending;
     } else {
         sortColumn = column;
@@ -315,65 +328,54 @@ function sortBooks(column) {
     showBooks();
 }
 
-
-// Previous page
 function previous() {
-
     if (page > 1) {
         page--;
         showBooks();
     }
 }
 
-
-// Next page
 function next() {
-
-    let filter = document.getElementById("filter").value;
-
-    let sql = "SELECT COUNT(*) FROM books";
-
-    if (filter != "") {
-        sql += " WHERE status = '" + filter + "'";
-    }
-
-    let count = db.exec(sql)[0].values[0][0];
-
-    if (page * limit < count) {
+    if (page * limit < bookRows().length) {
         page++;
         showBooks();
     }
 }
 
-
-// Export CSV
 function exportCSV() {
-
-    let result = db.exec("SELECT * FROM books");
-
-    if (!result.length) {
+    if (!books.length) {
         alert("No books to export!");
         return;
     }
 
-    let csv = "ID,Book,Author,Status,Rating\n";
+    const lines = ["ID,Book,Author,Status,Rating"];
 
-    result[0].values.forEach(function(book) {
-        csv += book.join(",") + "\n";
+    books.forEach(function (book, index) {
+        lines.push([
+            index + 1,
+            csvCell(book.title),
+            csvCell(book.author),
+            csvCell(book.status),
+            book.rating ?? ""
+        ].join(","));
     });
 
-    let file = new Blob([csv], {
-        type: "text/csv"
-    });
-
-    let link = document.createElement("a");
-
+    const file = new Blob([lines.join("\n")], { type: "text/csv" });
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(file);
     link.download = "books.csv";
     link.click();
+    URL.revokeObjectURL(link.href);
 }
 
-</script>
+function csvCell(value) {
+    return '"' + String(value ?? "").replace(/"/g, '""') + '"';
+}
 
+Tracker.onReady(async function () {
+    books = await Tracker.load("books");
+    showBooks();
+});
+</script>
 </body>
 </html>

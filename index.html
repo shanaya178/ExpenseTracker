@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>My Dashboard</title>
+    <link rel="stylesheet" href="css/auth.css">
 
     <style>
         * {
@@ -196,6 +197,19 @@
 
 <body>
 
+    <div id="auth-gate">
+        <div class="auth-card">
+            <p class="auth-kicker">My Dashboard</p>
+            <h1 id="auth-title">Sign in to continue</h1>
+            <p id="auth-status">Checking your Google session…</p>
+            <button id="google-sign-in" type="button" hidden>
+                <span class="g-logo" aria-hidden="true"></span>
+                Sign in with Google
+            </button>
+            <p id="auth-error" role="alert"></p>
+        </div>
+    </div>
+
     <!-- Sidebar -->
     <aside class="sidebar">
 
@@ -206,7 +220,7 @@
         <p>Navigation</p>
 
         <nav class="nav">
-            <a href="books.html">📚 Books</a>
+            <a href="books.html">📚 Library</a>
             <a href="employees.html">👨‍💼 Employees</a>
             <a href="expenses.html">💰 Expenses</a>
             <a href="students.html">🎓 Students</a>
@@ -233,14 +247,14 @@
             <a href="books.html" class="card">
                 <div class="icon books">📚</div>
 
-                <h2>My Books</h2>
+                <h2>My Library</h2>
 
                 <p>
-                    View and manage your book collection and
+                    View and manage your library and
                     keep track of your reading projects.
                 </p>
 
-                <span class="arrow">Open Books →</span>
+                <span class="arrow">Open Library →</span>
             </a>
 
 
@@ -336,6 +350,14 @@
         </section>
 
     </main>
+
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
+    <script src="js/tracker.js"></script>
+    <script>
+        Tracker.onReady(function () {});
+    </script>
 
 </body>
 </html>

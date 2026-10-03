@@ -20,9 +20,24 @@
         type="text/css"
     >
 
+    <link rel="stylesheet" href="css/auth.css">
+
 </head>
 
-<body onload="onLoad()" class="bg-base-200 min-h-screen">
+<body class="bg-base-200 min-h-screen">
+
+    <div id="auth-gate">
+        <div class="auth-card">
+            <p class="auth-kicker">My Dashboard</p>
+            <h1 id="auth-title">Sign in to continue</h1>
+            <p id="auth-status">Checking your Google session…</p>
+            <button id="google-sign-in" type="button" hidden>
+                <span class="g-logo" aria-hidden="true"></span>
+                Sign in with Google
+            </button>
+            <p id="auth-error" role="alert"></p>
+        </div>
+    </div>
 
     <div class="max-w-6xl mx-auto p-6">
 
@@ -365,28 +380,24 @@
 
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
+    <script src="js/tracker.js"></script>
+
     <script>
 
         let expenses = [];
 
-        let editingIndex = -1;
+        let editingId = null;
 
-        // PAGE LOAD
+        let saving = false;
 
-        function onLoad() {
+        async function saveExpense() {
 
-            expenses =
-                JSON.parse(
-                    localStorage.getItem("expenses") ?? "[]"
-                );
-
-            loadExpenses();
-
-        }
-
-        // ADD OR UPDATE EXPENSE
-
-        function saveExpense() {
+            if (saving) {
+                return;
+            }
 
             let expense = {
 
@@ -406,47 +417,48 @@
 
             };
 
-            if (editingIndex === -1) {
+            saving = true;
 
-                // Add new expense
+            try {
 
-                expenses.push(expense);
+                if (editingId === null) {
 
-            } else {
+                    await Tracker.add("expenses", expense);
 
-                // Update existing expense
+                } else {
 
-                expenses[editingIndex] = expense;
+                    await Tracker.update("expenses", editingId, expense);
+
+                }
+
+                document.getElementById("expenseForm").reset();
+
+                editingId = null;
+
+                document.getElementById("formTitle")
+                    .innerText = "Add Expense";
+
+                document.getElementById("saveButton")
+                    .innerText = "Add Expense";
+
+                document.getElementById("cancelButton")
+                    .classList.add("hidden");
+
+                expenses = await Tracker.load("expenses");
+
+                loadExpenses();
+
+            } catch (error) {
+
+                Tracker.showBanner(Tracker.errorMessage(error));
+
+            } finally {
+
+                saving = false;
 
             }
 
-            // Save to localStorage
-
-            localStorage.setItem(
-                "expenses",
-                JSON.stringify(expenses)
-            );
-
-            // Reset form
-
-            document.getElementById("expenseForm").reset();
-
-            editingIndex = -1;
-
-            document.getElementById("formTitle")
-                .innerText = "Add Expense";
-
-            document.getElementById("saveButton")
-                .innerText = "Add Expense";
-
-            document.getElementById("cancelButton")
-                .classList.add("hidden");
-
-            loadExpenses();
-
         }
-
-        // LOAD EXPENSES
 
         function loadExpenses() {
 
@@ -462,19 +474,17 @@
 
             let categoryTotals = {};
 
-            expenses.forEach(function (expense, index) {
+            let visibleNumber = 0;
 
-                // CATEGORY FILTER
+            expenses.forEach(function (expense) {
 
                 let categoryMatches =
                     selectedCategory === "All" ||
                     expense.category === selectedCategory;
 
-                // MONTH FILTER
-
                 let monthMatches =
                     selectedMonth === "" ||
-                    expense.date.startsWith(selectedMonth);
+                    String(expense.date || "").startsWith(selectedMonth);
 
                 if (!categoryMatches || !monthMatches) {
 
@@ -482,12 +492,9 @@
 
                 }
 
-                // TOTAL
+                visibleNumber = visibleNumber + 1;
 
-                total =
-                    total + expense.amount;
-
-                // CATEGORY TOTAL
+                total = total + Number(expense.amount);
 
                 if (
                     categoryTotals[expense.category]
@@ -500,45 +507,43 @@
 
                 categoryTotals[expense.category] =
                     categoryTotals[expense.category]
-                    + expense.amount;
-
-                // TABLE ROW
+                    + Number(expense.amount);
 
                 htmlString += `
 
                     <tr>
 
                         <td>
-                            ${index + 1}
+                            ${visibleNumber}
                         </td>
 
                         <td>
-                            ${expense.name}
+                            ${Tracker.escape(expense.name)}
                         </td>
 
                         <td>
-                            ${expense.category}
+                            ${Tracker.escape(expense.category)}
                         </td>
 
                         <td>
-                            ₹${expense.amount}
+                            ₹${Tracker.escape(expense.amount)}
                         </td>
 
                         <td>
-                            ${expense.date}
+                            ${Tracker.escape(expense.date)}
                         </td>
 
                         <td>
 
                             <button
-                                onclick="editExpense(${index})"
+                                onclick="editExpense('${expense.id}')"
                                 class="btn btn-warning btn-sm mr-2"
                             >
                                 Edit
                             </button>
 
                             <button
-                                onclick="deleteExpense(${index})"
+                                onclick="deleteExpense('${expense.id}')"
                                 class="btn btn-error btn-sm"
                             >
                                 Delete
@@ -552,6 +557,18 @@
 
             });
 
+            if (!htmlString) {
+
+                htmlString = `
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            No expenses yet.
+                        </td>
+                    </tr>
+                `;
+
+            }
+
             document.getElementById("expenseList")
                 .innerHTML = htmlString;
 
@@ -561,8 +578,6 @@
             showCategoryTotals(categoryTotals);
 
         }
-
-        // SHOW CATEGORY TOTALS
 
         function showCategoryTotals(categoryTotals) {
 
@@ -579,11 +594,11 @@
                         <div class="card-body">
 
                             <h3 class="font-bold">
-                                ${category}
+                                ${Tracker.escape(category)}
                             </h3>
 
                             <p class="text-2xl text-primary">
-                                ₹${categoryTotals[category]}
+                                ₹${Tracker.escape(categoryTotals[category])}
                             </p>
 
                         </div>
@@ -599,11 +614,15 @@
 
         }
 
-        // EDIT EXPENSE
+        function editExpense(id) {
 
-        function editExpense(index) {
+            let expense = expenses.find(function (item) {
+                return item.id === id;
+            });
 
-            let expense = expenses[index];
+            if (!expense) {
+                return;
+            }
 
             document.getElementById("expenseName").value =
                 expense.name;
@@ -617,7 +636,7 @@
             document.getElementById("date").value =
                 expense.date;
 
-            editingIndex = index;
+            editingId = id;
 
             document.getElementById("formTitle")
                 .innerText = "Edit Expense";
@@ -635,11 +654,9 @@
 
         }
 
-        // CANCEL EDIT
-
         function cancelEdit() {
 
-            editingIndex = -1;
+            editingId = null;
 
             document.getElementById("expenseForm")
                 .reset();
@@ -655,9 +672,7 @@
 
         }
 
-        // DELETE EXPENSE
-
-        function deleteExpense(index) {
+        async function deleteExpense(id) {
 
             let answer =
                 confirm(
@@ -670,18 +685,25 @@
 
             }
 
-            expenses.splice(index, 1);
+            try {
 
-            localStorage.setItem(
-                "expenses",
-                JSON.stringify(expenses)
-            );
+                await Tracker.remove("expenses", id);
 
-            loadExpenses();
+                if (editingId === id) {
+                    cancelEdit();
+                }
+
+                expenses = await Tracker.load("expenses");
+
+                loadExpenses();
+
+            } catch (error) {
+
+                Tracker.showBanner(Tracker.errorMessage(error));
+
+            }
 
         }
-
-        // CLEAR FILTERS
 
         function clearFilters() {
 
@@ -695,7 +717,18 @@
 
         }
 
+        Tracker.onReady(async function () {
+
+            await Tracker.migrateLocalList("expenses", "expenses");
+
+            expenses = await Tracker.load("expenses");
+
+            loadExpenses();
+
+        });
+
     </script>
+
 
 </body>
 

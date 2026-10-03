@@ -22,9 +22,24 @@
         type="text/css"
     >
 
+    <link rel="stylesheet" href="css/auth.css">
+
 </head>
 
-<body onload="onLoad()" class="bg-base-200 min-h-screen">
+<body class="bg-base-200 min-h-screen">
+
+    <div id="auth-gate">
+        <div class="auth-card">
+            <p class="auth-kicker">My Dashboard</p>
+            <h1 id="auth-title">Sign in to continue</h1>
+            <p id="auth-status">Checking your Google session…</p>
+            <button id="google-sign-in" type="button" hidden>
+                <span class="g-logo" aria-hidden="true"></span>
+                Sign in with Google
+            </button>
+            <p id="auth-error" role="alert"></p>
+        </div>
+    </div>
 
     <div class="max-w-6xl mx-auto p-6">
 
@@ -491,24 +506,24 @@
 
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore-compat.js"></script>
+    <script src="js/tracker.js"></script>
+
     <script>
 
         let medicines = [];
 
-        let editingIndex = -1;
+        let editingId = null;
 
-        function onLoad() {
+        let saving = false;
 
-            medicines =
-                JSON.parse(
-                    localStorage.getItem("medicines") ?? "[]"
-                );
+        async function saveMedicine() {
 
-            loadMedicines();
-
-        }
-
-        function saveMedicine() {
+            if (saving) {
+                return;
+            }
 
             let medicine = {
 
@@ -540,35 +555,46 @@
 
             };
 
-            if (editingIndex === -1) {
+            saving = true;
 
-                medicines.push(medicine);
+            try {
 
-            } else {
+                if (editingId === null) {
 
-                medicines[editingIndex] = medicine;
+                    await Tracker.add("medicines", medicine);
+
+                } else {
+
+                    await Tracker.update("medicines", editingId, medicine);
+
+                }
+
+                document.getElementById("medicineForm").reset();
+
+                editingId = null;
+
+                document.getElementById("formTitle")
+                    .innerText = "Add Medicine";
+
+                document.getElementById("saveButton")
+                    .innerText = "Add Medicine";
+
+                document.getElementById("cancelButton")
+                    .classList.add("hidden");
+
+                medicines = await Tracker.load("medicines");
+
+                loadMedicines();
+
+            } catch (error) {
+
+                Tracker.showBanner(Tracker.errorMessage(error));
+
+            } finally {
+
+                saving = false;
 
             }
-
-            localStorage.setItem(
-                "medicines",
-                JSON.stringify(medicines)
-            );
-
-            document.getElementById("medicineForm").reset();
-
-            editingIndex = -1;
-
-            document.getElementById("formTitle")
-                .innerText = "Add Medicine";
-
-            document.getElementById("saveButton")
-                .innerText = "Add Medicine";
-
-            document.getElementById("cancelButton")
-                .classList.add("hidden");
-
-            loadMedicines();
 
         }
 
@@ -588,7 +614,9 @@
 
             let typeTotals = {};
 
-            medicines.forEach(function (medicine, index) {
+            let visibleNumber = 0;
+
+            medicines.forEach(function (medicine) {
 
                 let typeMatches =
                     selectedType === "All" ||
@@ -604,9 +632,11 @@
 
                 }
 
+                visibleNumber = visibleNumber + 1;
+
                 total = total + 1;
 
-                if (medicine.quantity <= 5) {
+                if (Number(medicine.quantity) <= 5) {
 
                     lowStock = lowStock + 1;
 
@@ -626,52 +656,52 @@
                     <tr>
 
                         <td>
-                            ${index + 1}
+                            ${visibleNumber}
                         </td>
 
                         <td>
-                            ${medicine.name}
+                            ${Tracker.escape(medicine.name)}
                         </td>
 
                         <td>
-                            ${medicine.type}
+                            ${Tracker.escape(medicine.type)}
                         </td>
 
                         <td>
-                            ${medicine.dosage}
+                            ${Tracker.escape(medicine.dosage)}
                         </td>
 
                         <td>
-                            ${medicine.frequency}
+                            ${Tracker.escape(medicine.frequency)}
                         </td>
 
                         <td>
-                            ${medicine.timeToTake}
+                            ${Tracker.escape(medicine.timeToTake)}
                         </td>
 
                         <td>
-                            ${medicine.startDate}
+                            ${Tracker.escape(medicine.startDate)}
                         </td>
 
                         <td>
-                            ${medicine.quantity}
+                            ${Tracker.escape(medicine.quantity)}
                         </td>
 
                         <td>
-                            ${medicine.notes}
+                            ${Tracker.escape(medicine.notes)}
                         </td>
 
                         <td>
 
                             <button
-                                onclick="editMedicine(${index})"
+                                onclick="editMedicine('${medicine.id}')"
                                 class="btn btn-warning btn-sm mr-2"
                             >
                                 Edit
                             </button>
 
                             <button
-                                onclick="deleteMedicine(${index})"
+                                onclick="deleteMedicine('${medicine.id}')"
                                 class="btn btn-error btn-sm"
                             >
                                 Delete
@@ -684,6 +714,18 @@
                 `;
 
             });
+
+            if (!htmlString) {
+
+                htmlString = `
+                    <tr>
+                        <td colspan="10" class="text-center">
+                            No medicines yet.
+                        </td>
+                    </tr>
+                `;
+
+            }
 
             document.getElementById("medicineList")
                 .innerHTML = htmlString;
@@ -711,11 +753,11 @@
                         <div class="card-body">
 
                             <h3 class="font-bold">
-                                ${type}
+                                ${Tracker.escape(type)}
                             </h3>
 
                             <p class="text-2xl text-primary">
-                                ${typeTotals[type]}
+                                ${Tracker.escape(typeTotals[type])}
                             </p>
 
                         </div>
@@ -731,9 +773,15 @@
 
         }
 
-        function editMedicine(index) {
+        function editMedicine(id) {
 
-            let medicine = medicines[index];
+            let medicine = medicines.find(function (item) {
+                return item.id === id;
+            });
+
+            if (!medicine) {
+                return;
+            }
 
             document.getElementById("medicineName").value =
                 medicine.name;
@@ -759,7 +807,7 @@
             document.getElementById("notes").value =
                 medicine.notes;
 
-            editingIndex = index;
+            editingId = id;
 
             document.getElementById("formTitle")
                 .innerText = "Edit Medicine";
@@ -779,7 +827,7 @@
 
         function cancelEdit() {
 
-            editingIndex = -1;
+            editingId = null;
 
             document.getElementById("medicineForm")
                 .reset();
@@ -795,7 +843,7 @@
 
         }
 
-        function deleteMedicine(index) {
+        async function deleteMedicine(id) {
 
             let answer =
                 confirm(
@@ -808,14 +856,23 @@
 
             }
 
-            medicines.splice(index, 1);
+            try {
 
-            localStorage.setItem(
-                "medicines",
-                JSON.stringify(medicines)
-            );
+                await Tracker.remove("medicines", id);
 
-            loadMedicines();
+                if (editingId === id) {
+                    cancelEdit();
+                }
+
+                medicines = await Tracker.load("medicines");
+
+                loadMedicines();
+
+            } catch (error) {
+
+                Tracker.showBanner(Tracker.errorMessage(error));
+
+            }
 
         }
 
@@ -831,7 +888,18 @@
 
         }
 
+        Tracker.onReady(async function () {
+
+            await Tracker.migrateLocalList("medicines", "medicines");
+
+            medicines = await Tracker.load("medicines");
+
+            loadMedicines();
+
+        });
+
     </script>
+
 
 </body>
 
