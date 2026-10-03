@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/pastel.css">
 </head>
 
 <body class="bg-base-200 min-h-screen p-8">
@@ -36,7 +37,7 @@
             <div class="stat">
                 <div class="stat-title">Total employees</div>
                 <div id="employeeCount" class="stat-value text-primary">0</div>
-                <div id="employeeHint" class="stat-desc">Saved for this Google account</div>
+                <div id="employeeHint" class="stat-desc">People on your list</div>
             </div>
         </div>
 
@@ -155,7 +156,7 @@
             document.getElementById("employeeCount").textContent = String(employees.length);
             document.getElementById("employeeHint").textContent = query
                 ? "Showing " + visible.length + " of " + employees.length
-                : "Saved in Firestore for this Google account";
+                : "People on your list";
 
             if (visible.length === 0) {
                 document.getElementById("employeeList").innerHTML =

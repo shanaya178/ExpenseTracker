@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,560&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/auth.css">
     <style>
         * {
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: Nunito, "Segoe UI", sans-serif;
         }
 
         body {
             margin: 0;
-            background: #eff6ff;
+            color: #4c4158;
+            background:
+                radial-gradient(circle at 8% 12%, #ffe4f1 0, transparent 28%),
+                radial-gradient(circle at 90% 8%, #d9f6ea 0, transparent 26%),
+                radial-gradient(circle at 80% 80%, #ffe8cf 0, transparent 24%),
+                #fff7f2;
         }
 
         .container {
@@ -24,14 +30,16 @@
 
         h1 {
             text-align: center;
-            color: #2563eb;
+            color: #4c4158;
+            font-family: Fraunces, Georgia, serif;
+            font-weight: 560;
         }
 
         .total {
-            background: #2563eb;
-            color: white;
+            background: #f6d0e2;
+            color: #4c4158;
             padding: 25px;
-            border-radius: 15px;
+            border-radius: 24px;
             text-align: center;
             margin: 25px 0;
         }
@@ -42,36 +50,40 @@
         }
 
         .form {
-            background: white;
+            background: rgba(255, 253, 251, 0.92);
             padding: 25px;
-            border-radius: 15px;
+            border-radius: 24px;
+            box-shadow: 0 18px 40px rgba(176, 146, 168, 0.12);
         }
 
         input, button {
             width: 100%;
             padding: 12px;
             margin: 7px 0;
-            border-radius: 8px;
-            border: 1px solid #ddd;
+            border-radius: 12px;
+            border: 1px solid #ead7e4;
+            color: #4c4158;
         }
 
         button {
-            background: #2563eb;
-            color: white;
+            background: #f6d0e2;
+            color: #4c4158;
             border: none;
             cursor: pointer;
+            font-weight: 700;
         }
 
         .session {
-            background: white;
+            background: rgba(255, 253, 251, 0.92);
             padding: 20px;
             margin-top: 15px;
-            border-radius: 12px;
-            box-shadow: 0 3px 10px #ddd;
+            border-radius: 20px;
+            box-shadow: 0 10px 24px rgba(176, 146, 168, 0.12);
         }
 
         .delete {
-            background: #ef4444;
+            background: #f8cddd;
+            color: #4c4158;
         }
 
         .empty {

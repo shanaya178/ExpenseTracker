@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,560&family=Nunito:wght@500;700;800&display=swap");
+
+:root,
+[data-theme] {
+  --color-base-100: #fffdfb;
+  --color-base-200: #fff6f1;
+  --color-base-300: #f6e7f0;
+  --color-base-content: #4c4158;
+  --color-primary: #b56d8e;
+  --color-primary-content: #4c4158;
+  --color-secondary: #d7f0e4;
+  --color-secondary-content: #4c4158;
+  --color-accent: #e4d4f8;
+  --color-accent-content: #4c4158;
+  --color-neutral: #f3e4ee;
+  --color-neutral-content: #4c4158;
+  --color-info: #d9e8fb;
+  --color-info-content: #4c4158;
+  --color-success: #d7f3e4;
+  --color-success-content: #4c4158;
+  --color-warning: #ffe4c4;
+  --color-warning-content: #4c4158;
+  --color-error: #f6c9d8;
+  --color-error-content: #4c4158;
+}
+
+body {
+  color: #4c4158;
+  font-family: Nunito, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 8% 12%, #ffe4f1 0, transparent 28%),
+    radial-gradient(circle at 90% 8%, #d9f6ea 0, transparent 26%),
+    radial-gradient(circle at 80% 80%, #ffe8cf 0, transparent 24%),
+    radial-gradient(circle at 10% 85%, #e4dcff 0, transparent 28%),
+    #fff7f2 !important;
+}
+
+.btn-primary,
+.btn-primary:hover,
+.btn-warning,
+.btn-warning:hover,
+.btn-error,
+.btn-error:hover,
+.btn-neutral,
+.btn-neutral:hover {
+  border-color: transparent !important;
+  color: #4c4158 !important;
+}
+
+.btn-primary,
+.btn-primary:hover {
+  background-color: #f6d0e2 !important;
+}
+
+.btn-warning,
+.btn-warning:hover {
+  background-color: #ffe6c8 !important;
+}
+
+.btn-error,
+.btn-error:hover {
+  background-color: #f8cddd !important;
+}
+
+.btn-neutral,
+.btn-neutral:hover {
+  background-color: #efe4f4 !important;
+}
+
+.link-primary,
+.text-primary {
+  color: #b56d8e !important;
+}

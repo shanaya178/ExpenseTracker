@@ -4,44 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,560&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/auth.css">
     <style>
         body {
-            font-family: Arial;
-            background: linear-gradient(135deg, #8ec5fc, #e0c3fc);
+            font-family: Nunito, "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at 8% 12%, #ffe4f1 0, transparent 28%),
+                radial-gradient(circle at 90% 8%, #d9f6ea 0, transparent 26%),
+                radial-gradient(circle at 80% 80%, #ffe8cf 0, transparent 24%),
+                #fff7f2;
             padding: 20px;
+            color: #4c4158;
         }
 
         .box {
             max-width: 1000px;
             margin: auto;
-            background: white;
+            background: rgba(255, 253, 251, 0.92);
             padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px #777;
+            border-radius: 24px;
+            box-shadow: 0 18px 40px rgba(176, 146, 168, 0.16);
         }
 
         h1 {
             text-align: center;
-            color: #7b2cbf;
+            color: #4c4158;
+            font-family: Fraunces, Georgia, serif;
+            font-weight: 560;
         }
 
         input, select, button {
             padding: 10px;
             margin: 5px;
-            border-radius: 7px;
-            border: 1px solid #aaa;
+            border-radius: 12px;
+            border: 1px solid #ead7e4;
+            color: #4c4158;
+            background: #fff;
         }
 
         button {
-            background: #7b2cbf;
-            color: white;
+            background: #f6d0e2;
+            color: #4c4158;
             border: none;
             cursor: pointer;
+            font-weight: 700;
         }
 
         button:hover {
-            background: #5a189a;
+            background: #f0bdd4;
         }
 
         table {
@@ -51,31 +62,31 @@
         }
 
         th {
-            background: #ff4d6d;
-            color: white;
+            background: #f6d0e2;
+            color: #4c4158;
             cursor: pointer;
         }
 
         td, th {
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #f0e0ea;
             text-align: center;
         }
 
         tr:nth-child(even) {
-            background: #f8edff;
+            background: #fff4f8;
         }
 
         .delete {
-            background: #e63946;
+            background: #f8cddd;
         }
 
         .edit {
-            background: #ff9f1c;
+            background: #ffe6c8;
         }
 
         .csv {
-            background: #06a77d;
+            background: #d7f3e4;
         }
 
         .pages {
